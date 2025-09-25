@@ -1,0 +1,22 @@
+{
+  "AppLayout": {
+    "home": "ఇల్లు",
+    "logout": "లాగ్ అవుట్",
+    "profile": "ప్రొఫైల్"
+  },
+  "CustomersDashboardLayout": {
+    "home": "డాష్‌బోర్డ్",
+    "profile": "నా ప్రొఫైల్",
+    "bookings": "నా బుకింగ్‌లు",
+    "logout": "లాగ్ అవుట్"
+  },
+  "SuperAdminLayout": {
+    "dashboard": "డాష్‌బోర్డ్",
+    "bookings": "బుకింగ్‌లు",
+    "users": "వినియోగదారులు",
+    "services": "సేవలు",
+    "reports": "నివేదికలు",
+    "categories": "వర్గాలు",
+    "subCategories": "ఉప-వర్గాలు"
+  }
+}

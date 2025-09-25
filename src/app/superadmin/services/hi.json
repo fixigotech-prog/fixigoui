@@ -1,0 +1,22 @@
+{
+  "AppLayout": {
+    "home": "घर",
+    "logout": "लॉग आउट",
+    "profile": "प्रोफ़ाइल"
+  },
+  "CustomersDashboardLayout": {
+    "home": "डैशबोर्ड",
+    "profile": "मेरी प्रोफ़ाइल",
+    "bookings": "मेरी बुकिंग",
+    "logout": "लॉग आउट"
+  },
+  "SuperAdminLayout": {
+    "dashboard": "डैशबोर्ड",
+    "bookings": "बुकिंग",
+    "users": "उपयोगकर्ता",
+    "services": "सेवाएं",
+    "reports": "रिपोर्ट",
+    "categories": "श्रेणियाँ",
+    "subCategories": "उप-श्रेणियाँ"
+  }
+}

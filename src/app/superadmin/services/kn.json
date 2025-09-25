@@ -1,0 +1,22 @@
+{
+  "AppLayout": {
+    "home": "ಮನೆ",
+    "logout": "ಲಾಗೌಟ್",
+    "profile": "ಪ್ರೊಫೈಲ್"
+  },
+  "CustomersDashboardLayout": {
+    "home": "ಡ್ಯಾಶ್‌ಬೋರ್డ్",
+    "profile": "ನನ್ನ ಪ್ರೊಫೈಲ್",
+    "bookings": "ನನ್ನ ಬುಕಿಂಗ್‌ಗಳು",
+    "logout": "ಲಾಗೌಟ್"
+  },
+  "SuperAdminLayout": {
+    "dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ഡ്",
+    "bookings": "ಬುಕಿಂಗ್‌ಗಳು",
+    "users": "ಬಳಕೆದಾರರು",
+    "services": "ಸೇವೆಗಳು",
+    "reports": "ವರದಿಗಳು",
+    "categories": "ವರ್ಗಗಳು",
+    "subCategories": "ಉಪ-ವರ್ಗಗಳು"
+  }
+}
