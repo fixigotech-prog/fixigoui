@@ -227,7 +227,8 @@
     "video": "Video",
     "loadingServices": "Loading services...",
     "term": "Term",
-    "termUnit": "Term Unit"
+    "termUnit": "Term Unit",
+    "noServices": "No services found."
   },
   "SuperAdminCategoriesPage": {
     "title": "Manage Categories",

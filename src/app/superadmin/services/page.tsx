@@ -77,9 +77,9 @@ export default function ServicesPage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [services, setServices] = useState<ServiceFromApi[]>([]);
   const [categories, setCategories] = useState<CategoryFromApi[]>([]);
-  // const [selectedService, setSelectedService] = useState<ServiceFromApi | null>(null);
-  // const [isEditing, setIsEditing] = useState<boolean>(false);
-  // const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [selectedService, setSelectedService] = useState<ServiceFromApi | null>(null);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);

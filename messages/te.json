@@ -226,7 +226,8 @@
     "video": "వీడియో",
     "loadingServices": "సేవలు లోడ్ అవుతున్నాయి...",
     "term": "వ్యవధి",
-    "termUnit": "వ్యవధి యూనిట్"
+    "termUnit": "వ్యvధి యూనిట్",
+    "noServices": "సేవలు కనుగొనబడలేదు."
   },
   "SuperAdminCategoriesPage": {
     "title": "వర్గాలను నిర్వహించండి",
