@@ -35,7 +35,7 @@ export default function CategoriesPage() {
     setLoading(true);
     try {
       const response = await axios.get(`${API_URL}/api/categories`);
-      setCategories(response.data);
+      setCategories(response.data as Category[] || []);
     } catch (error) {
       console.error("Failed to fetch categories:", error);
     } finally {
