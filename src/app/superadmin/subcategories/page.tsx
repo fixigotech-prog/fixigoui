@@ -38,7 +38,7 @@ export default function SubCategoriesPage() {
   const fetchSubCategories = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/subcategories`);
-      setSubCategories(response.data);
+      setSubCategories(response.data as Subcategory[]);
     } catch (error) {
       console.error("Failed to fetch subcategories:", error);
     }
@@ -68,7 +68,7 @@ export default function SubCategoriesPage() {
  const fetchCategories = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/categories`);
-      setCategories(response.data);
+      setCategories(response.data as Category[]);
     } catch (error) {
       console.error("Failed to fetch categories:", error);
     }
