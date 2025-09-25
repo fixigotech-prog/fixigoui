@@ -115,7 +115,7 @@ export default function ServicesPage() {
       try {
         const resp = await axios.get(`${API_URL}/api/services`);
         const fetchedServices = resp.data as ServiceFromApi?? [];
-
+        setServices(fetchedServices as ServiceFromApi[] || []) 
         // build subCategoryId => categoryName map
         const subCategoryToCategoryMap = new Map<number, string>();
         categoriesData.forEach((category) => {
@@ -124,7 +124,7 @@ export default function ServicesPage() {
           });
         });
 
-        const processed = fetchedServices.map((service) => {
+        const processed = services.map((service) => {
           const detail = service.details.find((d) => d.lang === locale) || service.details.find((d) => d.lang === 'en');
           return {
             ...service,
