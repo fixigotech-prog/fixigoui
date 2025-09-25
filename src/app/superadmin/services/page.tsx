@@ -69,6 +69,10 @@ type NewServiceData = {
   details: NewServiceDetail[];
 };
 
+type UploadData={
+  url?:string
+}
+
 // ---------- Component ----------
 export default function ServicesPage() {
   const t = useTranslations('SuperAdminServicesPage');
@@ -178,7 +182,7 @@ export default function ServicesPage() {
     setSelectedService(null);
   }, []);
 
-  const uploadFile = useCallback(async (file: File): Promise<string | null> => {
+  const uploadFile = useCallback(async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -190,8 +194,8 @@ export default function ServicesPage() {
         },
       });
       // assume { url: string } response
-     const response=resp.data as string
-      return response?.url ?? null;
+     const response=resp.data as UploadData
+      return response?.url;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to upload file:', error);
