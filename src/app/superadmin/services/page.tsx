@@ -1,35 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import {useTranslations, useLocale} from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? ''; // keep as empty string fallback
 
-const statusStyles: {[key: string]: string} = {
+// Status style keys are limited to Active | Inactive
+const statusStyles: Record<'Active' | 'Inactive', string> = {
   Active: 'bg-green-100 text-green-800',
-  Inactive: 'bg-gray-100 text-gray-800'
+  Inactive: 'bg-gray-100 text-gray-800',
 };
 
+const termUnits = [
+  { value: 'N', text: 'NoTerm' },
+  { value: 'H', text: 'Hour' },
+  { value: 'D', text: 'Day' },
+] as const;
 
-const termUnits=[
-  {
-  value:'N',
-  text:"NoTerm"
-},
-{
-  value:'H',
-  text:"Hour"
-},
-{
-  value:'D',
-  text:"Day"
-}
-]
-// For the list of services from API
+// ---------- Types ----------
 type ServiceDetailFromApi = {
-  id: number;
+  id?: number;
   name: string;
   description: string;
   lang: string;
@@ -43,19 +35,22 @@ type ServiceFromApi = {
   termUnit: string;
   isActive: boolean;
   details: ServiceDetailFromApi[];
-  // For rendering
-  name: string;
-  categoryName: string;
+  // Derived for rendering
+  name?: string;
+  categoryName?: string;
 };
 
-// For categories API
+type SubCategory = {
+  id: number;
+  name: string;
+};
+
 type CategoryFromApi = {
   id: number;
   name: string;
-  subCategories: { id: number; name: string }[];
+  subCategories: SubCategory[];
 };
 
-// For the form modal
 type NewServiceDetail = {
   name: string;
   description: string;
@@ -74,16 +69,18 @@ type NewServiceData = {
   details: NewServiceDetail[];
 };
 
+// ---------- Component ----------
 export default function ServicesPage() {
-  const t = useTranslations('SuperAdminServicesPage'); // Ensure this namespace exists in your i18n messages
+  const t = useTranslations('SuperAdminServicesPage');
   const locale = useLocale();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [services, setServices] = useState<ServiceFromApi[]>([]);
   const [categories, setCategories] = useState<CategoryFromApi[]>([]);
-  const [selectedService, setSelectedService] = useState<ServiceFromApi | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // const [selectedService, setSelectedService] = useState<ServiceFromApi | null>(null);
+  // const [isEditing, setIsEditing] = useState<boolean>(false);
+  // const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
 
@@ -96,63 +93,73 @@ export default function ServicesPage() {
     isActive: true,
     details: [{ name: '', description: '', lang: 'en' }],
     imageUrl: '',
-    videoUrl: ''
+    videoUrl: '',
   });
 
-  // Separate function to fetch categories
-  const fetchCategories = async () => {
+  // ---------- API helpers ----------
+  const fetchCategories = useCallback(async (): Promise<CategoryFromApi[]> => {
     try {
-      const response = await axios.get(`${API_URL}/api/categories`);
-      const fetchedCategoriesResponse: CategoryFromApi[] = response.data;
-      setCategories(fetchedCategoriesResponse);
-      return fetchedCategoriesResponse;
-      
+      const resp = await axios.get(`${API_URL}/api/categories`);
+      setCategories(resp.data as CategoryFromApi[] ?? []);
+      return resp.data as CategoryFromApi[] ?? [];
     } catch (error) {
-      console.error("Failed to fetch categories:", error);
+      // eslint-disable-next-line no-console
+      console.error('Failed to fetch categories:', error);
+      setCategories([]);
       return [];
     }
-  };
+  }, []);
 
-  // Separate function to fetch and process services, which depends on categories
-  const fetchAndProcessServices = async (categoriesData: CategoryFromApi[]) => {
-    try {
-      const response = await axios.get(`${API_URL}/api/services`);
-      const fetchedServices: ServiceFromApi[] = response.data;
+  const fetchAndProcessServices = useCallback(
+    async (categoriesData: CategoryFromApi[]) => {
+      try {
+        const resp = await axios.get(`${API_URL}/api/services`);
+        const fetchedServices = resp.data as ServiceFromApi?? [];
 
-      const subCategoryToCategoryMap = new Map<number, string>();
-      categoriesData.forEach(category => {
-        category.subCategories.forEach(subCategory => {
-          subCategoryToCategoryMap.set(subCategory.id, category.name);
+        // build subCategoryId => categoryName map
+        const subCategoryToCategoryMap = new Map<number, string>();
+        categoriesData.forEach((category) => {
+          category.subCategories.forEach((subCategory) => {
+            subCategoryToCategoryMap.set(subCategory.id, category.name);
+          });
         });
-      });
 
-      const processedServices = fetchedServices.map(service => {
-        const detail = service.details.find(d => d.lang === locale) || service.details.find(d => d.lang === 'en');
-        return {
-          ...service,
-          name: detail ? detail.name : 'N/A',
-          categoryName: subCategoryToCategoryMap.get(service.subCategoryId) || 'N/A',
-        };
-      });
+        const processed = fetchedServices.map((service) => {
+          const detail = service.details.find((d) => d.lang === locale) || service.details.find((d) => d.lang === 'en');
+          return {
+            ...service,
+            name: detail?.name ?? 'N/A',
+            categoryName: subCategoryToCategoryMap.get(service.subCategoryId) ?? 'N/A',
+          } as ServiceFromApi;
+        });
 
-      setServices(processedServices);
-    } catch (error) {
-      console.error("Failed to fetch services:", error);
-    }
-  };
+        setServices(processed);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch services:', error);
+        setServices([]);
+      }
+    },
+    [locale]
+  );
 
   useEffect(() => {
-    const loadData = async () => {
+    let mounted = true;
+    const load = async () => {
+      if (!mounted) return;
       setLoading(true);
-      const categoriesData = await fetchCategories();
-      await fetchAndProcessServices(categoriesData);
-      setLoading(false);
+      const cats = await fetchCategories();
+      await fetchAndProcessServices(cats);
+      if (mounted) setLoading(false);
     };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [fetchCategories, fetchAndProcessServices, locale]);
 
-    loadData();
-  }, [locale]);
-
-  const handleCloseModal = () => {
+  // ---------- Modal / form helpers ----------
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setNewServiceData({
       price: '',
@@ -163,54 +170,63 @@ export default function ServicesPage() {
       isActive: true,
       details: [{ name: '', description: '', lang: 'en' }],
       imageUrl: '',
-      videoUrl: ''
+      videoUrl: '',
     });
     setImageFile(null);
     setVideoFile(null);
     setIsEditing(false);
     setSelectedService(null);
-  };
+  }, []);
 
-  const uploadFile = async (file: File): Promise<string | null> => {
+  const uploadFile = useCallback(async (file: File): Promise<string | null> => {
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-      const response = await axios.post(`${API_URL}/api/upload`, formData, {
+      const resp = await axios.post(`${API_URL}/api/upload`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data; boundary=something',
+          // let browser set boundary automatically; specifying it manually can cause issues
+          'Content-Type': 'multipart/form-data',
         },
       });
-      return response.data.url; // Assuming the API returns { url: 'path/to/file' }
+      // assume { url: string } response
+      return (resp.data && (resp.data.url as string)) ?? null;
     } catch (error) {
-      console.error("Failed to upload file:", error);
-      // In a real app, you'd want to show a user-facing error.
+      // eslint-disable-next-line no-console
+      console.error('Failed to upload file:', error);
       return null;
     }
-  };
+  }, []);
 
-  const handleSaveService = async () => {
+  const handleSaveService = useCallback(async () => {
     setIsSaving(true);
     try {
-      let imageUrl = newServiceData.imageUrl || null;
-      let videoUrl = newServiceData.videoUrl || null;
+      let imageUrl: string | null = newServiceData.imageUrl ?? null;
+      let videoUrl: string | null = newServiceData.videoUrl ?? null;
 
       if (imageFile) {
-        imageUrl = await uploadFile(imageFile);
+        const uploaded = await uploadFile(imageFile);
+        if (uploaded) imageUrl = uploaded;
       }
 
       if (videoFile) {
-        videoUrl = await uploadFile(videoFile);
+        const uploaded = await uploadFile(videoFile);
+        if (uploaded) videoUrl = uploaded;
       }
 
-      const subcategory = selectedCategoryObject?.subCategories.find(s => s.name === newServiceData.subcategory);
+      const subcategory = categories
+        .find((c) => c.name === newServiceData.category)
+        ?.subCategories.find((s) => s.name === newServiceData.subcategory);
+
       if (!subcategory) {
-        console.error("Subcategory not found or selected");
+        // eslint-disable-next-line no-console
+        console.error('Subcategory not found or selected');
         return;
       }
 
+      const priceNumber = parseFloat(newServiceData.price);
       const serviceToSave = {
-        price: parseFloat(newServiceData.price),
+        price: Number.isNaN(priceNumber) ? 0 : priceNumber,
         term: newServiceData.term,
         termUnit: newServiceData.termUnit,
         subCategoryId: subcategory.id,
@@ -221,69 +237,75 @@ export default function ServicesPage() {
       };
 
       await axios.post(`${API_URL}/api/services`, serviceToSave);
+
+      // refresh
       handleCloseModal();
-      const categoriesData = await fetchCategories();
-      await fetchAndProcessServices(categoriesData);
+      const cats = await fetchCategories();
+      await fetchAndProcessServices(cats);
     } catch (error) {
-      console.error("Failed to save service:", error);
-      // Optionally: show an error to the user
+      // eslint-disable-next-line no-console
+      console.error('Failed to save service:', error);
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [categories, fetchCategories, fetchAndProcessServices, handleCloseModal, imageFile, newServiceData, uploadFile, videoFile]);
 
-  const allLangs = [
-    { code: 'en', name: 'English' },
-    { code: 'hi', name: 'Hindi' },
-    { code: 'kn', name: 'Kannada' },
-    { code: 'te', name: 'Telugu' }
-  ];
+  // ---------- Form helpers ----------
+  const allLangs = useMemo(
+    () => [
+      { code: 'en', name: 'English' },
+      { code: 'hi', name: 'Hindi' },
+      { code: 'kn', name: 'Kannada' },
+      { code: 'te', name: 'Telugu' },
+    ],
+    []
+  );
 
-  const handleInputChange = (field: string, value: any, detailIndex?: number) => {
-    setNewServiceData(prev => {
+  const handleInputChange = useCallback(
+    (field: keyof NewServiceData | (keyof NewServiceDetail), value: unknown, detailIndex?: number) => {
+      setNewServiceData((prev) => {
+        if (!prev) return prev;
+        if (field === 'category') {
+          return { ...prev, category: String(value ?? ''), subcategory: '' };
+        }
+
+        if (detailIndex !== undefined) {
+          const newDetails = [...prev.details];
+          newDetails[detailIndex] = {
+            ...newDetails[detailIndex],
+            [field as keyof NewServiceDetail]: String(value ?? ''),
+          };
+          return { ...prev, details: newDetails };
+        }
+
+        return { ...prev, [field as keyof NewServiceData]: (value as any) } as NewServiceData;
+      });
+    },
+    []
+  );
+
+  const handleAddLanguage = useCallback(() => {
+    setNewServiceData((prev) => {
       if (!prev) return prev;
-
-      if (field === 'category') {
-        return { ...prev, category: value, subcategory: '' };
-      }
-
-      if (detailIndex !== undefined) {
-        const newDetails = [...prev.details];
-        newDetails[detailIndex] = {
-          ...newDetails[detailIndex],
-          [field]: value
-        };
-        return { ...prev, details: newDetails };
-      }
-      return { ...prev, [field]: value };
+      const currentLangs = new Set(prev.details.map((d) => d.lang));
+      const available = allLangs.find((l) => !currentLangs.has(l.code));
+      if (!available) return prev;
+      return { ...prev, details: [...prev.details, { name: '', description: '', lang: available.code }] };
     });
-  };
+  }, [allLangs]);
 
-  const handleAddLanguage = () => {
-    if (!newServiceData) return;
-    const currentLangs = new Set(newServiceData.details.map(d => d.lang));
-    const availableLang = allLangs.find(l => !currentLangs.has(l.code));
+  const handleRemoveLanguage = useCallback((indexToRemove: number) => {
+    setNewServiceData((prev) => {
+      if (!prev) return prev;
+      return { ...prev, details: prev.details.filter((_, i) => i !== indexToRemove) };
+    });
+  }, []);
 
-    if (availableLang) {
-      setNewServiceData(prev => ({
-        ...prev,
-        details: [...prev.details, { name: '', description: '', lang: availableLang.code }]
-      }));
-    }
-  };
+  const canAddLanguage = (newServiceData.details.length ?? 0) < allLangs.length;
 
-  const handleRemoveLanguage = (indexToRemove: number) => {
-    if (!newServiceData) return;
-    setNewServiceData(prev => ({
-      ...prev,
-      details: prev.details.filter((_, index) => index !== indexToRemove)
-    }));
-  };
+  const selectedCategoryObject = categories.find((c) => c.name === newServiceData.category);
 
-  const canAddLanguage = newServiceData?.details.length < allLangs.length;
-
-  const selectedCategoryObject = categories.find(c => c.name === newServiceData.category);
-
+  // ---------- Rendering ----------
   return (
     <div>
       <div className="sm:flex sm:items-center">
@@ -301,8 +323,11 @@ export default function ServicesPage() {
           </button>
         </div>
       </div>
+
       {loading ? (
-        <div className="mt-8 text-center"><p>{t('loadingServices')}</p></div>
+        <div className="mt-8 text-center">
+          <p>{t('loadingServices')}</p>
+        </div>
       ) : (
         <div className="mt-8 flow-root">
           <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -311,11 +336,11 @@ export default function ServicesPage() {
                 <table className="min-w-full divide-y divide-gray-300">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">{t('serviceName')}</th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{t('category')}</th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{t('price')}</th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{t('status')}</th>
-                      <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                      <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">{t('serviceName')}</th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{t('category')}</th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{t('price')}</th>
+                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">{t('status')}</th>
+                      <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                         <span className="sr-only">{t('edit')}</span>
                       </th>
                     </tr>
@@ -327,15 +352,38 @@ export default function ServicesPage() {
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{service.categoryName}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{`₹${service.price}`}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[service.isActive ? 'Active' : 'Inactive']}`}>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                              statusStyles[service.isActive ? 'Active' : 'Inactive']
+                            }`}
+                          >
                             {t(service.isActive ? 'active' : 'inactive')}
                           </span>
                         </td>
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                          <a href="#" className="text-cyan-600 hover:text-cyan-900">{t('edit')}<span className="sr-only">, {service.name}</span></a>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedService(service);
+                              setIsEditing(true);
+                              // we'd set newServiceData from service if edit flow implemented
+                              setIsModalOpen(true);
+                            }}
+                            className="text-cyan-600 hover:text-cyan-900"
+                          >
+                            {t('edit')}
+                            <span className="sr-only">, {service.name}</span>
+                          </button>
                         </td>
                       </tr>
                     ))}
+                    {services.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">
+                          {t('noServices')}
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -347,9 +395,11 @@ export default function ServicesPage() {
       {isModalOpen && newServiceData && (
         <div className="fixed inset-0 w-7xl z-10 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" />
 
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+              &#8203;
+            </span>
 
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -358,6 +408,7 @@ export default function ServicesPage() {
                     <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
                       {t('addServiceModalTitle')}
                     </h3>
+
                     <div className="mt-4">
                       <label htmlFor="image" className="block text-sm font-medium text-gray-700">
                         {t('image')}
@@ -371,6 +422,7 @@ export default function ServicesPage() {
                         className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
                       />
                     </div>
+
                     <div className="mt-4">
                       <label htmlFor="video" className="block text-sm font-medium text-gray-700">
                         {t('video')}
@@ -384,6 +436,7 @@ export default function ServicesPage() {
                         className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100"
                       />
                     </div>
+
                     <div className="mt-2">
                       <label htmlFor="price" className="block text-sm font-medium text-gray-700">
                         {t('price')}
@@ -398,6 +451,7 @@ export default function ServicesPage() {
                         placeholder="100"
                       />
                     </div>
+
                     <div className="mt-2">
                       <label htmlFor="term" className="block text-sm font-medium text-gray-700">
                         {t('term')}
@@ -412,21 +466,26 @@ export default function ServicesPage() {
                         placeholder="e.g., 30"
                       />
                     </div>
+
                     <div className="mt-2">
                       <label htmlFor="termUnit" className="block text-sm font-medium text-gray-700">
                         {t('termUnit')}
                       </label>
-                     <select id="termUnit" name="termUnit" value={newServiceData.termUnit} 
-                     onChange={(e) => handleInputChange('termUnit', e.target.value)}
-                     className="mt-1 block w-full rounded-md border border-black px-3 py-2 focus:outline-none sm:text-sm"
-                     >
-                         {
-                          termUnits.map(tu=>{
-                            return <option key={tu.value} value={tu.value}>{tu.text}</option>
-                          })
-                         }
-                     </select>
+                      <select
+                        id="termUnit"
+                        name="termUnit"
+                        value={newServiceData.termUnit}
+                        onChange={(e) => handleInputChange('termUnit', e.target.value)}
+                        className="mt-1 block w-full rounded-md border border-black px-3 py-2 focus:outline-none sm:text-sm"
+                      >
+                        {termUnits.map((tu) => (
+                          <option key={tu.value} value={tu.value}>
+                            {tu.text}
+                          </option>
+                        ))}
+                      </select>
                     </div>
+
                     <div className="mt-4">
                       <label htmlFor="category" className="block text-sm font-medium text-gray-700">
                         {t('category')}
@@ -439,14 +498,15 @@ export default function ServicesPage() {
                         className="mt-1 block w-full rounded-md border border-black px-3 py-2 focus:outline-none sm:text-sm"
                       >
                         <option value="">{t('selectCategory')}</option>
-                       {categories.map((category) => (
+                        {categories.map((category) => (
                           <option key={category.id} value={category.name}>
                             {category.name}
                           </option>
                         ))}
                       </select>
                     </div>
-                       <div className="mt-4">
+
+                    <div className="mt-4">
                       <label htmlFor="subcategory" className="block text-sm font-medium text-gray-700">
                         {t('subcategory')}
                       </label>
@@ -466,6 +526,7 @@ export default function ServicesPage() {
                         ))}
                       </select>
                     </div>
+
                     <div className="mt-4">
                       <label htmlFor="status" className="block text-sm font-medium text-gray-700">
                         {t('status')}
@@ -481,21 +542,25 @@ export default function ServicesPage() {
                         <option value="Inactive">{t('inactive')}</option>
                       </select>
                     </div>
+
                     {newServiceData.details.map((detail, index) => (
                       <div key={index} className="mt-4 border-t pt-4 first:mt-2 first:border-t-0">
                         <div className="flex justify-between items-center">
-                          <h4 className="text-md font-medium text-gray-900">{t('serviceDetails')} ({detail.lang.toUpperCase()})</h4>
+                          <h4 className="text-md font-medium text-gray-900">
+                            {t('serviceDetails')} ({detail.lang.toUpperCase()})
+                          </h4>
                           {newServiceData.details.length > 1 && (
                             <button
                               type="button"
                               onClick={() => handleRemoveLanguage(index)}
                               className="text-red-600 hover:text-red-800"
+                              aria-label={t('delete')}
                             >
-                              <span className="sr-only">{t('delete')}</span>
                               <XMarkIcon className="h-5 w-5" />
                             </button>
                           )}
                         </div>
+
                         <div className="mt-2">
                           <label htmlFor={`name-${index}`} className="block text-sm font-medium text-gray-700">
                             {t('serviceName')} ({detail.lang.toUpperCase()})
@@ -507,9 +572,10 @@ export default function ServicesPage() {
                             value={detail.name}
                             onChange={(e) => handleInputChange('name', e.target.value, index)}
                             className="mt-1 block w-full rounded-md border border-black px-3 py-2 focus:outline-none sm:text-sm"
-                            placeholder={t('serviceNamePlaceholder')}
+                            placeholder={String(t('serviceNamePlaceholder'))}
                           />
                         </div>
+
                         <div className="mt-2">
                           <label htmlFor={`description-${index}`} className="block text-sm font-medium text-gray-700">
                             {t('serviceDescription')} ({detail.lang.toUpperCase()})
@@ -521,9 +587,10 @@ export default function ServicesPage() {
                             value={detail.description}
                             onChange={(e) => handleInputChange('description', e.target.value, index)}
                             className="mt-1 block w-full rounded-md border border-black px-3 py-2 focus:outline-none sm:text-sm"
-                            placeholder={t('serviceDescriptionPlaceholder')}
-                          ></textarea>
+                            placeholder={String(t('serviceDescriptionPlaceholder'))}
+                          />
                         </div>
+
                         <div className="mt-2">
                           <label htmlFor={`lang-${index}`} className="block text-sm font-medium text-gray-700">
                             {t('language')}
@@ -535,8 +602,12 @@ export default function ServicesPage() {
                             onChange={(e) => handleInputChange('lang', e.target.value, index)}
                             className="mt-1 block w-full rounded-md border border-black px-3 py-2 focus:outline-none sm:text-sm"
                           >
-                            {allLangs.map(langInfo => (
-                              <option key={langInfo.code} value={langInfo.code} disabled={newServiceData.details.some((d, i) => i !== index && d.lang === langInfo.code)}>
+                            {allLangs.map((langInfo) => (
+                              <option
+                                key={langInfo.code}
+                                value={langInfo.code}
+                                disabled={newServiceData.details.some((d, i) => i !== index && d.lang === langInfo.code)}
+                              >
                                 {langInfo.name}
                               </option>
                             ))}
@@ -544,6 +615,7 @@ export default function ServicesPage() {
                         </div>
                       </div>
                     ))}
+
                     <button
                       type="button"
                       onClick={handleAddLanguage}
@@ -557,11 +629,21 @@ export default function ServicesPage() {
                   </div>
                 </div>
               </div>
+
               <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" onClick={handleSaveService} disabled={isSaving} className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-cyan-600 text-base font-medium text-white hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
+                <button
+                  type="button"
+                  onClick={handleSaveService}
+                  disabled={isSaving}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-cyan-600 text-base font-medium text-white hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                >
                   {t('save')}
                 </button>
-                <button type="button" onClick={handleCloseModal} className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
                   {t('cancel')}
                 </button>
               </div>
