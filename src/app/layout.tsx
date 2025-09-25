@@ -5,7 +5,6 @@ import './globals.css'; // Assuming you have a global CSS file
 
 export default async function RootLayout({
   children,
-  
 }: {
   children: ReactNode;
   
