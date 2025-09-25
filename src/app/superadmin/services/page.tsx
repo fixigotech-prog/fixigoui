@@ -190,7 +190,8 @@ export default function ServicesPage() {
         },
       });
       // assume { url: string } response
-      return (resp.data && (resp.data.url as string)) ?? null;
+     const response=resp.data as string
+      return response?.url ?? null;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Failed to upload file:', error);
