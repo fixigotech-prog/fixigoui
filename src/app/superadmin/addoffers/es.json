@@ -1,0 +1,19 @@
+
+{
+  "SuperAdminAddOfferPage": {
+    "title": "Añadir nueva oferta",
+    "offerImage": "Imagen de la oferta",
+    "uploadOfferImage": "Haga clic para cargar o arrastre y suelte la imagen de la oferta",
+    "destinationUrl": "URL de destino",
+    "promocode": "Código de promoción",
+    "selectPromocode": "Seleccione un código de promoción",
+    "startDate": "Fecha de inicio",
+    "endDate": "Fecha de finalización",
+    "errorAllFields": "Por favor, rellene todos los campos obligatorios y suba una imagen.",
+    "errorCreateOffer": "Error al crear la oferta. Por favor, inténtelo de nuevo.",
+    "errorFetchPromocodes": "Error al obtener los códigos de promoción.",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "saveOffer": "Guardar oferta"
+  }
+}

@@ -31,6 +31,7 @@
     "title": "घर"
   },
   "IndexPage": {
+    "fucTitle": "अक्सर उपयोग की जाने वाली सेवाएँ",
     "appStore": "ऐप स्टोर",
     "backToLoginLink": "लॉगिन पर वापस जाएं",
     "benefitConvenienceDesc": "अपनी सुविधानुसार एक स्लॉट बुक करें और हमारे पेशेवर समय पर वहां होंगे।",
@@ -127,6 +128,29 @@
     "errorPasswordLength": "पासवर्ड कम से कम 8 वर्णों का होना चाहिए।",
     "errorPasswordMismatch": "पासवर्ड मेल नहीं खाते।",
     "errorPhoneInvalid": "कृपया एक मान्य 10-अंकीय फ़ोन नंबर दर्ज करें।"
+  },
+  "Footer": {
+    "about": "हमारे बारे में",
+    "blog": "फिक्सिगो ब्लॉग",
+    "careers": "करियर",
+    "company": "कंपनी",
+    "contactUs": "हमसे संपर्क करें",
+    "copyright": "© 2024 फिक्सिगो",
+    "deliverTo": "हम यहां डिलीवरी करते हैं",
+    "facebook": "फेसबुक",
+    "fixigoGenie": "फिक्सिगो जिनी",
+    "fixigoInstamart": "फिक्सिगो इंस्टामार्ट",
+    "fixigoPlus": "फिक्सिगो प्लस",
+    "help": "सहायता और समर्थन",
+    "instagram": "इंस्टाग्राम",
+    "legal": "कानूनी",
+    "partner": "हमारे साथ पार्टनर बनें",
+    "pinterest": "पिंटरेस्ट",
+    "cookiePolicy": "कुकी नीति",
+    "privacyPolicy": "गोपनीयता नीति",
+    "ride": "हमारे साथ सवारी करें",
+    "terms": "नियम और शर्तें",
+    "twitter": "ट्विटर"
   },
   "LocaleSwitcher": {
     "en": "अंग्रेज़ी",

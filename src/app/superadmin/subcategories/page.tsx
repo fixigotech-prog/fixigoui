@@ -34,6 +34,7 @@ export default function SubCategoriesPage() {
   const [newSubCategoryName, setNewSubCategoryName] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const API_URL= process.env.NEXT_PUBLIC_API_URL;
 
   const fetchSubCategories = async () => {
     try {

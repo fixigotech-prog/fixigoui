@@ -31,6 +31,7 @@
     "title": "Home"
   },
   "IndexPage": {
+    "fucTitle":"Frequently Used Services",
     "appStore": "App Store",
     "backToLoginLink": "Back to Login",
     "benefitConvenienceDesc": "Book a slot at your convenience and our professionals will be there on time.",
@@ -66,6 +67,21 @@
     "forgotPasswordSubtitle": "Enter your phone number to receive a verification code.",
     "forgotPasswordTitle": "Forgot Password",
     "googlePlay": "Google Play",
+    "offer1Desc": "Get your home sparkling clean for the festive season.",
+    "offer1Title": "20% Off on Deep Cleaning",
+    "offer2Desc": "On any cleaning service above ₹2000.",
+    "offer2Title": "Flat ₹500 Off",
+    "offer3Desc": "First-time user? Get a special discount on your first booking.",
+    "offer3Title": "15% Off for New Users",
+    "offer4Desc": "Get 10% off on all appliance and home repair services.",
+    "offer4Title": "Save on Repairs",
+    "offer5Desc": "Book our annual pest control plan and get the first service free.",
+    "offer5Title": "Free Pest Control Service",
+    "offer6Desc": "Give your home a fresh new look with our professional painting services.",
+    "offer6Title": "25% Off on Painting",
+    "offersTitle": "Special Offers For You",
+    "offersSubtitle": "Exclusive deals and discounts to make our services even more affordable.",
+    "promoCode": "Promo Code",
     "hasAccount": "Already have an account?",
     "howItWorksSubtitle": "Get any home service in 4 easy steps",
     "howItWorksTitle": "How Fixigo Works",
@@ -127,6 +143,29 @@
     "errorPasswordLength": "Password must be at least 8 characters.",
     "errorPasswordMismatch": "Passwords do not match.",
     "errorPhoneInvalid": "Please enter a valid 10-digit phone number."
+  },
+  "Footer": {
+    "about": "About Us",
+    "blog": "Fixigo Blog",
+    "careers": "Careers",
+    "company": "Company",
+    "contactUs": "Contact us",
+    "copyright": "© 2024 Fixigo",
+    "deliverTo": "We deliver to",
+    "facebook": "Facebook",
+    "fixigoGenie": "Fixigo Genie",
+    "fixigoInstamart": "Fixigo Instamart",
+    "fixigoPlus": "Fixigo Plus",
+    "help": "Help & Support",
+    "instagram": "Instagram",
+    "legal": "Legal",
+    "partner": "Partner with us",
+    "pinterest": "Pinterest",
+    "cookiePolicy": "Cookie Policy",
+    "privacyPolicy": "Privacy Policy",
+    "ride": "Ride with us",
+    "terms": "Terms & Conditions",
+    "twitter": "Twitter"
   },
   "LocaleSwitcher": {
     "en": "English",
@@ -255,5 +294,24 @@
     "actions": "Actions",
     "delete": "Delete",
     "loading": "Loading categories..."
+  },
+   "SuperAdminAddOfferPage": {
+    "IndexPage": {
+      "fucTitle": "Servicios de uso frecuente"
+    },
+    "title": "Añadir nueva oferta",
+    "offerImage": "Imagen de la oferta",
+    "uploadOfferImage": "Haga clic para cargar o arrastre y suelte la imagen de la oferta",
+    "destinationUrl": "URL de destino",
+    "promocode": "Código de promoción",
+    "selectPromocode": "Seleccione un código de promoción",
+    "startDate": "Fecha de inicio",
+    "endDate": "Fecha de finalización",
+    "errorAllFields": "Por favor, rellene todos los campos obligatorios y suba una imagen.",
+    "errorCreateOffer": "Error al crear la oferta. Por favor, inténtelo de nuevo.",
+    "errorFetchPromocodes": "Error al obtener los códigos de promoción.",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "saveOffer": "Guardar oferta"
   }
 }

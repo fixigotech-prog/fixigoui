@@ -18,7 +18,19 @@ const nextConfig = {
     loader: "imgix",
     path: "/",
       remotePatterns: [
-      new URL('https://localhost:3001/public/asset')
+      new URL('https://localhost:3001/public'),
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '172.30.48.1',
+        port: '3001', // Your API is on port 3001
+        pathname: '/public/images/**',
+      },
     ],
   },
   typescript: {

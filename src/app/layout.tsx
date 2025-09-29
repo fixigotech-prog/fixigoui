@@ -1,7 +1,14 @@
 import {NextIntlClientProvider} from 'next-intl';
 import {getMessages,getLocale} from 'next-intl/server';
 import {ReactNode} from 'react';
+import { Poppins } from 'next/font/google';
 import './globals.css'; // Assuming you have a global CSS file
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
 
 export default async function RootLayout({
   children,
@@ -15,7 +22,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body>
+      <body className={poppins.className}>
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>

@@ -1,0 +1,19 @@
+
+{
+  "SuperAdminAddOfferPage": {
+    "title": "Add New Offer",
+    "offerImage": "Offer Image",
+    "uploadOfferImage": "Click to upload or drag and drop Offer Image",
+    "destinationUrl": "Destination URL",
+    "promocode": "Promocode",
+    "selectPromocode": "Select a promocode",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "errorAllFields": "Please fill in all required fields and upload an image.",
+    "errorCreateOffer": "Failed to create offer. Please try again.",
+    "errorFetchPromocodes": "Failed to fetch promocodes.",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "saveOffer": "Save Offer"
+  }
+}

@@ -18,13 +18,19 @@ import {
   UserGroupIcon,
   WrenchIcon,
   XMarkIcon
-} from '@heroicons/react/24/outline';
+} from '@heroicons/react/24/solid';
 import {useRouter} from 'next/navigation';
-import {useTranslations} from 'next-intl';
+import {useTranslations, useLocale} from 'next-intl';
 import {useEffect, useState} from 'react';
+import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from 'react-icons/fa';
 import LocaleSwitcher from '@/components/LocaleSwitcher';
+import Image from 'next/image';
 import {ArrowDownTrayIcon} from '@heroicons/react/16/solid';
-
+import Slider from 'react-slick';
+import axios from 'axios';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+import Footer from '@/components/Footer';
 const benefits = [
   {
     name: 'benefitConvenienceTitle',
@@ -48,23 +54,42 @@ const benefits = [
   }
 ];
 
+const staticOffers=[
+  {
+    id: 1,
+    imageUrl:"/images/offers/vip-22.png"
+  },
+  {
+    id: 2,
+    imageUrl:"/images/offers/painting.png"
+  },
+  {
+    id: 3,
+    imageUrl:"/images/offers/Exterior-Cleanig.png"
+  },
+  {
+    id: 4,
+    imageUrl:"/images/offers/cleaning-Discount.png"
+  },
+]
+
 const homeServices = [
   {
     category: 'serviceCategoryAC',
     items: [
       {name: 'serviceACRepair', icon: Cog6ToothIcon},
       {name: 'serviceApplianceRepair', icon: WrenchIcon}
-    ]
+    ],
   },
   {
     category: 'serviceCategoryCleaning',
     items: [
-      {name: 'serviceBathroomCleaning', icon: HomeModernIcon},
-      {name: 'serviceDeepCleaning', icon: HomeModernIcon},
+      {name: 'serviceBathroomCleaning', icon: SparklesIcon},
+      {name: 'serviceDeepCleaning', icon: SparklesIcon},
       {name: 'serviceSofaCleaning', icon: SparklesIcon},
-      {name: 'serviceKitchenCleaning', icon: HomeModernIcon},
-      {name: 'servicePestControl', icon: BoltIcon}
-    ]
+      {name: 'serviceKitchenCleaning', icon: SparklesIcon},
+      {name: 'servicePestControl', icon: ShieldCheckIcon}
+    ],
   },
   {
     category: 'serviceCategoryHomeRepairs',
@@ -73,8 +98,8 @@ const homeServices = [
       {name: 'servicePlumbing', icon: WrenchIcon},
       {name: 'serviceCarpenter', icon: WrenchIcon},
       {name: 'servicePainting', icon: PaintBrushIcon},
-      {name: 'serviceHandyman', icon: AcademicCapIcon}
-    ]
+      {name: 'serviceHandyman', icon: WrenchIcon}
+    ],
   }
 ];
 
@@ -97,17 +122,56 @@ const faqs = [
   {question: 'faq4Question', answer: 'faq4Answer'}
 ];
 
+interface Promocode {
+  id: number;
+  code: string;
+  discountType: string;
+  discountValue: number;
+  expiryDate: string;
+  usageLimit: number;
+  timesUsed: number;
+  serviceId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Offer {
+  id: number;
+  imageUrl: string;
+  link: string;
+  promocodeId: number;
+  isActive: boolean;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+  updatedAt: string;
+  promocode: Promocode;
+}
+
 export default function IndexPage() {
   const t = useTranslations('IndexPage');
   const router = useRouter();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [offers, setOffers] = useState<Offer[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStep, setModalStep] = useState<
     'phone' | 'otp' | 'forgot-password'
   >('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [timer, setTimer] = useState(30);
- console.log(process.env.NEXT_PUBLIC_URL)
+ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+ useEffect(() => {
+    const fetchOffers = async () => {
+      try {
+        const response = await axios.get<Offer[]>(`${API_URL}/api/offers/all`);
+        setOffers(response.data);
+      } catch (error) {
+        console.error('Failed to fetch offers:', error);
+      }
+    };
+    fetchOffers();
+  }, []);
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (modalStep === 'otp' && timer > 0) {
@@ -165,14 +229,37 @@ export default function IndexPage() {
     </div>
   );
 
+  const sliderSettings = {
+    dots: true,
+    infinite: true,
+    speed: 1000,
+    slidesToShow: 2,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 3000,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+      {
+        breakpoint: 640,
+        settings: {
+          slidesToShow: 1,
+        },
+      },
+    ],
+  };
   return (
     <div className="bg-gray-50">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white/80 shadow-sm backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between p-4">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-8 pr-8">
             <a href="#" className="text-2xl font-bold text-gray-900">
-              Fixigo
+              <Image src="/images/logo2.svg" width="130" height="28" alt="" />
             </a>
             <nav className="hidden gap-6 md:flex">
               <a
@@ -210,65 +297,67 @@ export default function IndexPage() {
 
       {/* Hero Section */}
       <main>
-        <div className="relative isolate bg-gradient-to-r from-cyan-500 to-blue-500">
+        <div className="relative isolate bg-gradient-to-r from-blue-400 via-blue-600 to-blue-800">
           <div className="overflow-hidden pt-14">
-            <div className="mx-auto max-w-7xl px-6 pb-32 pt-10 sm:pt-24 lg:px-8 lg:pt-16">
-              <div className="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
-                <div className="w-full max-w-xl lg:shrink-0 xl:max-w-2xl">
-                  <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            <div className="mx-auto grid  grid-cols-1 gap-x-8 gap-y-16 px-6 lg:grid-cols-2">
+              <div className="flex flex-col justify-center py-10 text-center">
+                <h2 className="text-2xl font-bold text-white sm:text-3xl ">
+                  
+                  {t("fucTitle")}
+                </h2>
+                <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4 ">
+                  {[
+                    { name: 'serviceACRepair', icon: Cog6ToothIcon, color: 'bg-blue-100 text-blue-600' },
+                    { name: 'serviceDeepCleaning', icon: SparklesIcon, color: 'bg-green-100 text-green-600' },
+                    { name: 'servicePlumbing', icon: WrenchIcon, color: 'bg-yellow-100 text-yellow-600' },
+                    { name: 'serviceElectrician', icon: BoltIcon, color: 'bg-red-100 text-red-600' },
+                    { name: 'serviceCarpenter', icon: HomeModernIcon, color: 'bg-purple-100 text-purple-600' },
+                    { name: 'servicePainting', icon: PaintBrushIcon, color: 'bg-pink-100 text-pink-600' },
+                    { name: 'serviceApplianceRepair', icon: Cog6ToothIcon, color: 'bg-indigo-100 text-indigo-600' },
+                    { name: 'servicePestControl', icon: ShieldCheckIcon, color: 'bg-gray-100 text-gray-600' },
+                  ].map((service) => (
+                    <a
+                      key={t(service.name)}
+                      href="#"
+                      className="group flex flex-col items-center justify-center rounded-lg bg-white/80 p-2 text-center shadow-md transition-transform hover:-translate-y-1 hover:shadow-xl"
+                    >
+                      <div className={`flex h-14 w-14 items-center justify-center rounded-full ${service.color}`}>
+                        <service.icon className="h-8 w-8" />
+                      </div>
+                      <p className="mt-3 text-sm font-semibold text-gray-800">{t(service.name)}</p>
+                    </a>
+                  ))}
+                </div>
+              </div>
+              <div className="mx-auto max-w-7xl px-6 pb-16 pt-10 sm:pt-16 lg:px-8 lg:pt-20">
+                <div className="mx-auto max-w-2xl text-center">
+                  <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
                     {t('title')}
                   </h1>
-                  <p className="relative mt-6 text-lg leading-8 text-gray-600 sm:max-w-md lg:max-w-none">
+                  <p className="mt-6 text-lg leading-8 text-gray-200">
                     {t('subtitle')}
                   </p>
                 </div>
-                <div className="mt-14 flex justify-end gap-8 sm:-mt-44 sm:justify-start sm:pl-20 lg:mt-0 lg:pl-0">
-                  <div className="ml-auto w-44 flex-none space-y-8 pt-32 sm:ml-0 sm:pt-80 lg:order-last lg:pt-36 xl:order-none xl:pt-80">
-                    <div className="relative">
-                      <img
-                        src="https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80"
-                        alt={t('card1Alt')}
-                        className="aspect-[2/3] w-full rounded-xl bg-gray-900/5 object-cover shadow-lg"
-                      />
-                      <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10" />
-                    </div>
-                  </div>
-                  <div className="mr-auto w-44 flex-none space-y-8 sm:mr-0 sm:pt-52 lg:pt-36">
-                    <div className="relative">
-                      <img
-                        src="https://images.unsplash.com/photo-1485217988980-11786ced9454?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80"
-                        alt={t('card2Alt')}
-                        className="aspect-[2/3] w-full rounded-xl bg-gray-900/5 object-cover shadow-lg"
-                      />
-                      <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10" />
-                    </div>
-                    <div className="relative">
-                      <img
-                        src="https://images.unsplash.com/photo-1559087867-ce4c91325525?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80"
-                        alt={t('card3Alt')}
-                        className="aspect-[2/3] w-full rounded-xl bg-gray-900/5 object-cover shadow-lg"
-                      />
-                      <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10" />
-                    </div>
-                  </div>
-                  <div className="w-44 flex-none space-y-8 pt-32 sm:pt-0">
-                    <div className="relative">
-                      <img
-                        src="https://images.unsplash.com/photo-1670272504528-790c24957dda?ixlib=rb-4.0.3&ixid=MnwxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80"
-                        alt=""
-                        className="aspect-[2/3] w-full rounded-xl bg-gray-900/5 object-cover shadow-lg"
-                      />
-                      <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10" />
-                    </div>
-                    <div className="relative">
-                      <img
-                        src="https://images.unsplash.com/photo-1670272505284-8faba1c31f7d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDF8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&h=528&q=80"
-                        alt=""
-                        className="aspect-[2/3] w-full rounded-xl bg-gray-900/5 object-cover shadow-lg"
-                      />
-                      <div className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10" />
-                    </div>
-                  </div>
+                <div className="mt-16 grid grid-cols-1 gap-8 sm:mt-24 md:grid-cols-3">
+                  <Image
+                    src="/images/cleaning-main.png"
+                    alt="Technician working on an air conditioner"
+                    width={400} height={300}
+                    className="aspect-[4/3] w-full rounded-lg object-cover shadow-lg"
+                  />
+                  <Image
+                    src="/images/pest-control.jpeg"
+                    width={400} height={300}
+                    style={{ objectFit: 'fill' }}
+                    alt="Person cleaning a window"
+                    className="aspect-[4/3] w-full rounded-lg object-cover shadow-lg"
+                  />
+                  <Image
+                    src="/images/ac-repair.jpeg"
+                    alt="Electrician working on a circuit breaker"
+                    width={400} height={300}
+                    className="aspect-[4/3] w-full rounded-lg object-cover shadow-lg"
+                  />
                 </div>
               </div>
             </div>
@@ -276,69 +365,31 @@ export default function IndexPage() {
         </div>
       </main>
 
-      {/* Benefits Section */}
-      <section className="bg-white py-24 sm:py-32">
+      {/* Offers Section */}
+      <section className="bg-gray-100 py-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl lg:text-center">
-            <h2 className="text-base font-semibold leading-7 text-cyan-600">
-              {t('benefitsTitle')}
-            </h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              {t('whyChooseUsTitle')}
-            </p>
-          </div>
-          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-4">
-              {benefits.map((benefit) => (
-                <div key={t(benefit.name)} className="flex flex-col">
-                  <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-                    <benefit.icon
-                      className="h-5 w-5 flex-none text-cyan-600"
-                      aria-hidden="true"
+          
+          <div className="mt-16">
+            <Slider {...sliderSettings}>
+              {staticOffers.map((offer, index) => (
+                <div key={offer.id} className="px-2">
+                  <div className="relative">
+                    <Image
+                      src={offer.imageUrl}
+                      alt=""
+                      width={480}
+                      height={220}
+                      className="rounded-lg object-cover"
                     />
-                    {t(benefit.name)}
-                  </dt>
-                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-                    <p className="flex-auto">{t(benefit.description)}</p>
-                  </dd>
+                  </div>
                 </div>
               ))}
-            </dl>
+            </Slider>
           </div>
         </div>
       </section>
-
-      {/* How It Works Section */}
-      <section className="py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-base font-semibold leading-7 text-cyan-600">
-              {t('howItWorksSubtitle')}
-            </h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-              {t('howItWorksTitle')}
-            </p>
-          </div>
-          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-4">
-            {howItWorks.map((step, index) => (
-              <div
-                key={t(step.name)}
-                className="flex flex-col items-center text-center"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-cyan-600 text-white">
-                  <step.icon className="h-6 w-6" aria-hidden="true" />
-                </div>
-                <h3 className="mt-6 text-lg font-semibold text-gray-900">
-                  {t(step.name)}
-                </h3>
-                <p className="mt-2 text-base text-gray-600">
-                  {t(step.description)}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      
+    
 
       {/* Our Services Section */}
       <section className="bg-white py-24 sm:py-32">
@@ -361,7 +412,8 @@ export default function IndexPage() {
                       className="flex flex-col items-center gap-y-3 text-center"
                     >
                       <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-100">
-                        <service.icon className="h-10 w-10 text-gray-700" />
+                      <service.icon className="h-10 w-10 text-blue-600" />
+
                       </div>
                       <p className="font-medium text-gray-800">{t(service.name)}</p>
                     </div>
@@ -372,6 +424,69 @@ export default function IndexPage() {
           </div>
         </div>
       </section>
+        {/* How It Works Section */}
+      <section className="py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-base font-semibold leading-7 text-blue-600">
+              {t('howItWorksSubtitle')}
+            </h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              {t('howItWorksTitle')}
+            </p>
+          </div>
+          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-4">
+            {howItWorks.map((step, index) => (
+              <div
+                key={t(step.name)}
+                className="flex flex-col items-center text-center"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-white">
+                  <step.icon className="h-6 w-6" aria-hidden="true" />
+                </div>
+                <h3 className="mt-6 text-lg font-semibold text-gray-900">
+                  {t(step.name)}
+                </h3>
+                <p className="mt-2 text-base text-gray-600">
+                  {t(step.description)}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      {/* Benefits Section */}
+      <section className="bg-white py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl lg:text-center">
+            <h2 className="text-base font-semibold leading-7 text-blue-600">
+              {t('benefitsTitle')}
+            </h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              {t('whyChooseUsTitle')}
+            </p>
+          </div>
+          <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
+            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-4">
+              {benefits.map((benefit) => (
+                <div key={t(benefit.name)} className="flex flex-col">
+                  <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
+                    <benefit.icon
+                      className="h-5 w-5 flex-none text-blue-600"
+                      aria-hidden="true"
+                    />
+                    {t(benefit.name)}
+                  </dt>
+                  <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
+                    <p className="flex-auto">{t(benefit.description)}</p>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+      </section>
+
 
       {/* Login/Signup Modal */}
       {isModalOpen && (
@@ -593,38 +708,9 @@ export default function IndexPage() {
           </div>
         </div>
       </section>
-
-      {/* Download App Section */}
-      <section className="py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex flex-col items-center gap-16 rounded-2xl bg-cyan-600 p-12 text-center lg:flex-row lg:gap-x-20 lg:text-left">
-            <div className="lg:w-0 lg:flex-1">
-              <h2 className="text-3xl font-bold tracking-tight text-white">
-                {t('downloadAppTitle')}
-              </h2>
-              <p className="mt-4 text-lg text-cyan-100">
-                {t('downloadAppSubtitle')}
-              </p>
-            </div>
-            <div className="flex gap-x-4">
-              <a
-                href="#"
-                className="flex items-center gap-x-2.5 rounded-md bg-white px-5 py-3 font-semibold text-gray-900 hover:bg-gray-100"
-              >
-                <ArrowUpOnSquareIcon className="h-5 w-5" />
-                {t('appStore')}
-              </a>
-              <a
-                href="#"
-                className="flex items-center gap-x-2.5 rounded-md bg-white px-5 py-3 font-semibold text-gray-900 hover:bg-gray-100"
-              >
-                <ArrowDownTrayIcon className="h-5 w-5" />
-                {t('googlePlay')}
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      
+<Footer />
+      
     </div>
   );
 }

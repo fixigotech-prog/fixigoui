@@ -5,7 +5,8 @@
     "profile": "Profil"
   },
   "HomePage": {
-    "title": "Start"
+    "title": "Start",
+    "fucTitle": "Häufig genutzte Dienste"
   },
   "LocaleSwitcher": {
     "de": "Deutsch",
@@ -25,5 +26,24 @@
   },
   "ProfilePage": {
     "title": "Profil"
+  },
+  "IndexPage": {
+    "fucTitle": "Häufig genutzte Dienste"
+  },
+  "SuperAdminAddOfferPage": {
+    "title": "Neues Angebot hinzufügen",
+    "offerImage": "Angebotsbild",
+    "uploadOfferImage": "Klicken Sie zum Hochladen oder ziehen Sie das Angebotsbild per Drag & Drop",
+    "destinationUrl": "Ziel-URL",
+    "promocode": "Gutscheincode",
+    "selectPromocode": "Wählen Sie einen Gutscheincode",
+    "startDate": "Startdatum",
+    "endDate": "Enddatum",
+    "errorAllFields": "Bitte füllen Sie alle Pflichtfelder aus und laden Sie ein Bild hoch.",
+    "errorCreateOffer": "Angebot konnte nicht erstellt werden. Bitte versuchen Sie es erneut.",
+    "errorFetchPromocodes": "Gutscheincodes konnten nicht abgerufen werden.",
+    "cancel": "Abbrechen",
+    "saving": "Speichern...",
+    "saveOffer": "Angebot speichern"
   }
 }
