@@ -61,7 +61,7 @@ const staticOffers=[
   },
   {
     id: 2,
-    imageUrl:"/images/offers/painting.png"
+    imageUrl:"/images/offers/Painting.png"
   },
   {
     id: 3,
@@ -69,7 +69,7 @@ const staticOffers=[
   },
   {
     id: 4,
-    imageUrl:"/images/offers/cleaning-Discount.png"
+    imageUrl:"/images/offers/Cleaning-discount.png"
   },
 ]
 
