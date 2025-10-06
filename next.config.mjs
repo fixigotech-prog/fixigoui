@@ -13,7 +13,8 @@ const nextConfig = {
       'static.vecteezy.com',
       'img.freepik.com',
       'fixigoui.onrender.com'
-    ]
+    ],
+    formats: ['image/webp', 'image/avif', 'image/jpeg', 'image/png', 'image/jfif']
   }
 };
 
