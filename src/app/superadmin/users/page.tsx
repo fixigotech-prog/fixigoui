@@ -4,23 +4,40 @@ import {useTranslations} from 'next-intl';
 import {useState, useEffect} from 'react';
 import axios from 'axios';
 
+interface User {
+  id: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  role: 'admin' | 'super_admin' | 'master';
+  createdAt: string;
+}
+
+interface CreateUserRequest {
+  fullName: string;
+  email: string;
+  password: string;
+  phone: string;
+  role: 'admin' | 'super_admin' | 'master';
+}
+
 export default function UsersPage() {
   const t = useTranslations('SuperAdminUsersPage');
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CreateUserRequest>({
     fullName: '',
     email: '',
     password: '',
     phone: '',
-    role: 'admin' as 'admin' | 'super_admin' | 'master'
+    role: 'admin'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 const API_URL= process.env.NEXT_PUBLIC_API_URL;
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/admin-users`);
+      const response = await axios.get<User[]>(`${API_URL}/api/users`);
       setUsers(response.data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -37,7 +54,7 @@ const API_URL= process.env.NEXT_PUBLIC_API_URL;
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await axios.post(`${API_URL}/api/admin-users`, formData);
+      await axios.post<User>(`${API_URL}/api/admin-users`, formData);
       setIsModalOpen(false);
       setFormData({ fullName: '', email: '', password: '', phone: '', role: 'admin' });
       fetchUsers();
@@ -92,7 +109,7 @@ const API_URL= process.env.NEXT_PUBLIC_API_URL;
                       <td colSpan={6} className="text-center py-4">No users found</td>
                     </tr>
                   ) : (
-                    users.map((user: any) => (
+                    users.map((user: User) => (
                       <tr key={user.id}>
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{user.fullName}</td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{user.email}</td>
