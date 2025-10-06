@@ -339,7 +339,7 @@ export default function IndexPage() {
                     { name: 'serviceDeepCleaning', icon: `${getCurrentDomain()}/images/pestcontrol3.jpeg`, color: 'bg-green-50', animation: 'animate-bounce' },
                     { name: 'servicePlumbing', icon: `${getCurrentDomain()}/images/fuservices/plumbing.jpg`, color: 'bg-orange-50', animation: 'animate-spin' },
                     { name: 'serviceElectrician', icon: `${getCurrentDomain()}/images/fuservices/electrcian.jpg`, color: 'bg-yellow-50', animation: 'animate-ping' },
-                    { name: 'serviceCarpenter', icon: `${getCurrentDomain()}/images/fuservices/carpenter.jpg`, color: 'bg-purple-50', animation: 'animate-pulse' },
+                    { name: 'serviceCarpenter', icon: `${getCurrentDomain()}/images/fuservices/Carpenter.jpg`, color: 'bg-purple-50', animation: 'animate-pulse' },
                     { name: 'servicePainting', icon: `${getCurrentDomain()}/images/fuservices/painting.jpg`, color: 'bg-pink-50', animation: 'animate-bounce' },
                     { name: 'serviceApplianceRepair', icon: `${getCurrentDomain()}/images/fuservices/appliancerepair.jpg`, color: 'bg-indigo-50', animation: 'animate-spin' },
                     { name: 'servicePestControl', icon: `${getCurrentDomain()}/images/fuservices/pestcontrol.jpg`, color: 'bg-red-50', animation: 'animate-ping' },
@@ -450,7 +450,7 @@ export default function IndexPage() {
               {
                 category: 'serviceCategoryCleaning',
                 services: [
-                  { name: 'serviceDeepCleaning', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop' },
+                  { name: 'serviceDeepCleaning', image: `${getCurrentDomain()}/images/deepcleaning.jpg` },
                   { name: 'serviceBathroomCleaning', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop' },
                   { name: 'serviceKitchenCleaning', image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop' },
                   { name: 'serviceSofaCleaning', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop' },
@@ -460,17 +460,17 @@ export default function IndexPage() {
               {
                 category: 'serviceCategoryAC',
                 services: [
-                  { name: 'serviceACRepair', image: `${getCurrentDomain()}/images/ourservices/acreapairphoto.jfif` },
+                  { name: 'serviceACRepair', image: `${getCurrentDomain()}/images/ourservices/acreapairphoto.jpg` },
                   { name: 'serviceApplianceRepair', image: `${getCurrentDomain()}/images/ourservices/appliancephoto.jpg` }
                 ]
               },
               {
                 category: 'serviceCategoryHomeRepairs',
                 services: [
-                  { name: 'serviceElectrician', image: `${getCurrentDomain()}/images/ourservices/electricianphoto.jfif` },
-                  { name: 'servicePlumbing', image: `${getCurrentDomain()}/images/ourservices/plumbingphoto.jfif`},
-                  { name: 'serviceCarpenter', image: `${getCurrentDomain()}/images/ourservices/carpenterphoto.jfif` },
-                  { name: 'servicePainting', image: `${getCurrentDomain()}/images/ourservices/paintingphoto.jfif` }
+                  { name: 'serviceElectrician', image: `${getCurrentDomain()}/images/ourservices/electricianphoto.jpg` },
+                  { name: 'servicePlumbing', image: `${getCurrentDomain()}/images/ourservices/plumbingphoto.jpg`},
+                  { name: 'serviceCarpenter', image: `${getCurrentDomain()}/images/ourservices/carpenterphoto.jpg` },
+                  { name: 'servicePainting', image: `${getCurrentDomain()}/images/ourservices/paintingphoto.jpg` }
                   
                 ]
               }
