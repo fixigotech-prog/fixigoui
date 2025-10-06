@@ -139,7 +139,7 @@
     "deliverTo": "हम यहां डिलीवरी करते हैं",
     "facebook": "फेसबुक",
     "fixigoGenie": "फिक्सिगो जिनी",
-    "fixigoInstamart": "फिक्सिगो इंस्टामार्ट",
+    "fixigoExpert": "फिक्सिगो एक्सपर्ट",
     "fixigoPlus": "फिक्सिगो प्लस",
     "help": "सहायता और समर्थन",
     "instagram": "इंस्टाग्राम",
@@ -150,7 +150,14 @@
     "privacyPolicy": "गोपनीयता नीति",
     "ride": "हमारे साथ सवारी करें",
     "terms": "नियम और शर्तें",
-    "twitter": "ट्विटर"
+    "twitter": "ट्विटर",
+    "socialLinks": "सोशल लिंक्स",
+    "cities": {
+      "bangalore": "बैंगलोर",
+      "pune": "पुणे",
+      "delhi": "दिल्ली",
+      "hyderabad": "हैदराबाद"
+    }
   },
   "LocaleSwitcher": {
     "en": "अंग्रेज़ी",
@@ -278,5 +285,21 @@
     "actions": "कार्रवाइयाँ",
     "delete": "हटाएं",
     "loading": "श्रेणियाँ लोड हो रही हैं..."
+  },
+  "SuperAdminAddOfferPage": {
+    "title": "नया ऑफ़र जोड़ें",
+    "offerImage": "ऑफ़र छवि",
+    "uploadOfferImage": "ऑफ़र छवि अपलोड करने के लिए क्लिक करें या खींचें और छोड़ें",
+    "destinationUrl": "गंतव्य यूआरएल",
+    "promocode": "प्रोमो कोड",
+    "selectPromocode": "एक प्रोमो कोड चुनें",
+    "startDate": "प्रारंभ तिथि",
+    "endDate": "अंतिम तिथि",
+    "errorAllFields": "कृपया सभी आवश्यक फ़ील्ड भरें और एक छवि अपलोड करें।",
+    "errorCreateOffer": "ऑफ़र बनाने में विफल। कृपया पुनः प्रयास करें।",
+    "errorFetchPromocodes": "प्रोमो कोड प्राप्त करने में विफल।",
+    "cancel": "रद्द करें",
+    "saving": "सहेज रहा है...",
+    "saveOffer": "ऑफ़र सहेजें"
   }
 }

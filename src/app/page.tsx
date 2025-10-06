@@ -31,6 +31,8 @@ import axios from 'axios';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import Footer from '@/components/Footer';
+import LocationModal from '@/components/LocationModal';
+import Header from '@/components/Header';
 const benefits = [
   {
     name: 'benefitConvenienceTitle',
@@ -148,6 +150,16 @@ interface Offer {
   promocode: Promocode;
 }
 
+
+
+ function getCurrentDomain(): string {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  return "";
+}
+
+
 export default function IndexPage() {
   const t = useTranslations('IndexPage');
   const router = useRouter();
@@ -155,10 +167,19 @@ export default function IndexPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStep, setModalStep] = useState<
-    'phone' | 'otp' | 'forgot-password'
+    'phone' | 'otp' | 'forgot-password' | 'signup'
   >('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [timer, setTimer] = useState(30);
+  const [signupData, setSignupData] = useState({
+    fullName:'',
+    phone: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
  useEffect(() => {
@@ -171,6 +192,14 @@ export default function IndexPage() {
       }
     };
     fetchOffers();
+    
+    // Show location modal on page load if location not already set
+    const savedLocation = localStorage.getItem('userLocation');
+    if (!savedLocation) {
+      setTimeout(() => setIsLocationModalOpen(true), 1000);
+    } else {
+      setUserLocation(JSON.parse(savedLocation));
+    }
   }, []);
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -186,10 +215,18 @@ export default function IndexPage() {
     };
   }, [modalStep, timer]);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (phoneNumber.length === 10) {
-      setModalStep('otp');
-      setTimer(30);
+      try {
+        const response = await axios.post(`${API_URL}/api/auth/login`, {
+          phone: phoneNumber
+        });
+        setModalStep('otp');
+        setTimer(30);
+      } catch (error) {
+        console.error('Login error:', error);
+        alert('Login failed. Please try again.');
+      }
     }
   };
 
@@ -209,6 +246,32 @@ export default function IndexPage() {
     setIsModalOpen(false);
     setModalStep('phone');
     setPhoneNumber('');
+    setSignupData({ fullName:'', phone: '', email: '', password: '', confirmPassword: '' });
+  };
+
+  const handleLocationSelect = (location: { lat: number; lng: number; address: string }) => {
+    setUserLocation(location);
+    localStorage.setItem('userLocation', JSON.stringify(location));
+  };
+
+  const handleSignup = async () => {
+    if (signupData.password !== signupData.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    try {
+      const response = await axios.post(`${API_URL}/api/auth/register`, {
+        fullName: signupData.fullName,
+        phone: signupData.phone,
+        email: signupData.email,
+        password: signupData.password
+      });
+      router.push('/customers/dashboard');
+      closeModal();
+    } catch (error) {
+      console.error('Signup error:', error);
+      alert('Registration failed. Please try again.');
+    }
   };
 
   const FaqItem = ({q, a, idx}: {q: string; a: string; idx: number}) => (
@@ -254,46 +317,11 @@ export default function IndexPage() {
   };
   return (
     <div className="bg-gray-50">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-white/80 shadow-sm backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between p-4">
-          <div className="flex items-center gap-8 pr-8">
-            <a href="#" className="text-2xl font-bold text-gray-900">
-              <Image src="/images/logo2.svg" width="130" height="28" alt="" />
-            </a>
-            <nav className="hidden gap-6 md:flex">
-              <a
-                href="#"
-                className="text-sm font-semibold text-gray-600 hover:text-gray-900"
-              >
-                {t('serviceACRepair')}
-              </a>
-              <a
-                href="#"
-                className="text-sm font-semibold text-gray-600 hover:text-gray-900"
-              >
-                {t('serviceApplianceRepair')}
-              </a> 
-              <a
-                href="#"
-                className="text-sm font-semibold text-gray-600 hover:text-gray-900"
-              >
-                {t('serviceCleaning')}
-              </a>
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            <LocaleSwitcher />
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(true)}
-              className="rounded-md bg-[#00A2B5] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#008C9E]"
-            >
-              {t('loginSignup')}
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header 
+        onLoginClick={() => setIsModalOpen(true)}
+        userLocation={userLocation}
+        onLocationChange={handleLocationSelect}
+      />
 
       {/* Hero Section */}
       <main>
@@ -305,29 +333,47 @@ export default function IndexPage() {
                   
                   {t("fucTitle")}
                 </h2>
-                <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4 ">
+                <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-3 lg:grid-cols-4">
                   {[
-                    { name: 'serviceACRepair', icon: Cog6ToothIcon, color: 'bg-blue-100 text-blue-600' },
-                    { name: 'serviceDeepCleaning', icon: SparklesIcon, color: 'bg-green-100 text-green-600' },
-                    { name: 'servicePlumbing', icon: WrenchIcon, color: 'bg-yellow-100 text-yellow-600' },
-                    { name: 'serviceElectrician', icon: BoltIcon, color: 'bg-red-100 text-red-600' },
-                    { name: 'serviceCarpenter', icon: HomeModernIcon, color: 'bg-purple-100 text-purple-600' },
-                    { name: 'servicePainting', icon: PaintBrushIcon, color: 'bg-pink-100 text-pink-600' },
-                    { name: 'serviceApplianceRepair', icon: Cog6ToothIcon, color: 'bg-indigo-100 text-indigo-600' },
-                    { name: 'servicePestControl', icon: ShieldCheckIcon, color: 'bg-gray-100 text-gray-600' },
-                  ].map((service) => (
+                    { name: 'serviceACRepair', icon: `${getCurrentDomain()}/images/fuservices/acrepair.jpg`, color: 'bg-blue-50', animation: 'animate-pulse' },
+                    { name: 'serviceDeepCleaning', icon: `${getCurrentDomain()}/images/pestcontrol3.jpeg`, color: 'bg-green-50', animation: 'animate-bounce' },
+                    { name: 'servicePlumbing', icon: `${getCurrentDomain()}/images/fuservices/plumbing.jpg`, color: 'bg-orange-50', animation: 'animate-spin' },
+                    { name: 'serviceElectrician', icon: `${getCurrentDomain()}/images/fuservices/electrcian.jpg`, color: 'bg-yellow-50', animation: 'animate-ping' },
+                    { name: 'serviceCarpenter', icon: `${getCurrentDomain()}/images/fuservices/carpenter.jpg`, color: 'bg-purple-50', animation: 'animate-pulse' },
+                    { name: 'servicePainting', icon: `${getCurrentDomain()}/images/fuservices/painting.jpg`, color: 'bg-pink-50', animation: 'animate-bounce' },
+                    { name: 'serviceApplianceRepair', icon: `${getCurrentDomain()}/images/fuservices/appliancerepair.jpg`, color: 'bg-indigo-50', animation: 'animate-spin' },
+                    { name: 'servicePestControl', icon: `${getCurrentDomain()}/images/fuservices/pestcontrol.jpg`, color: 'bg-red-50', animation: 'animate-ping' },
+                  ].map((service, index) => (
                     <a
                       key={t(service.name)}
                       href="#"
-                      className="group flex flex-col items-center justify-center rounded-lg bg-white/80 p-2 text-center shadow-md transition-transform hover:-translate-y-1 hover:shadow-xl"
+                      className="group flex flex-col items-center text-center transition-all duration-300 hover:scale-105"
+                      style={{
+                        animationDelay: `${index * 150}ms`,
+                        animation: 'fadeInUp 0.8s ease-out forwards'
+                      }}
                     >
-                      <div className={`flex h-14 w-14 items-center justify-center rounded-full ${service.color}`}>
-                        <service.icon className="h-8 w-8" />
-                      </div>
-                      <p className="mt-3 text-sm font-semibold text-gray-800">{t(service.name)}</p>
+                      <img 
+                        src={service.icon} 
+                        alt={t(service.name)}
+                        className="w-[120px] h-[120px] object-cover rounded-full shadow-lg group-hover:shadow-xl transition-all duration-300"
+                      />
+                      <p className="text-xs font-bold text-white mt-2 group-hover:text-blue-200 transition-colors duration-300">{t(service.name)}</p>
                     </a>
                   ))}
                 </div>
+                <style jsx>{`
+                  @keyframes fadeInUp {
+                    from {
+                      opacity: 0;
+                      transform: translateY(30px);
+                    }
+                    to {
+                      opacity: 1;
+                      transform: translateY(0);
+                    }
+                  }
+                `}</style>
               </div>
               <div className="mx-auto max-w-7xl px-6 pb-16 pt-10 sm:pt-16 lg:px-8 lg:pt-20">
                 <div className="mx-auto max-w-2xl text-center">
@@ -346,7 +392,7 @@ export default function IndexPage() {
                     className="aspect-[4/3] w-full rounded-lg object-cover shadow-lg"
                   />
                   <Image
-                    src="/images/pest-control.jpeg"
+                    src="/images/Pest-control.jpeg"
                     width={400} height={300}
                     style={{ objectFit: 'fill' }}
                     alt="Person cleaning a window"
@@ -399,23 +445,82 @@ export default function IndexPage() {
               {t('servicesTitle')}
             </h2>
           </div>
-          <div className="mt-16 space-y-16">
-            {homeServices.map((category) => (
-              <div key={t(category.category)}>
-                <h3 className="text-2xl font-bold tracking-tight text-gray-900">
+          <div className="mt-16 space-y-20">
+            {[
+              {
+                category: 'serviceCategoryCleaning',
+                services: [
+                  { name: 'serviceDeepCleaning', image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400&h=300&fit=crop' },
+                  { name: 'serviceBathroomCleaning', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop' },
+                  { name: 'serviceKitchenCleaning', image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop' },
+                  { name: 'serviceSofaCleaning', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop' },
+                  { name: 'servicePestControl', image: `${getCurrentDomain()}/images/pestcontrol3.jpeg` }
+                ]
+              },
+              {
+                category: 'serviceCategoryAC',
+                services: [
+                  { name: 'serviceACRepair', image: `${getCurrentDomain()}/images/ourservices/acreapairphoto.jfif` },
+                  { name: 'serviceApplianceRepair', image: `${getCurrentDomain()}/images/ourservices/appliancephoto.jpg` }
+                ]
+              },
+              {
+                category: 'serviceCategoryHomeRepairs',
+                services: [
+                  { name: 'serviceElectrician', image: `${getCurrentDomain()}/images/ourservices/electricianphoto.jfif` },
+                  { name: 'servicePlumbing', image: `${getCurrentDomain()}/images/ourservices/plumbingphoto.jfif`},
+                  { name: 'serviceCarpenter', image: `${getCurrentDomain()}/images/ourservices/carpenterphoto.jfif` },
+                  { name: 'servicePainting', image: `${getCurrentDomain()}/images/ourservices/paintingphoto.jfif` }
+                  
+                ]
+              }
+            ].map((category) => (
+              <div key={t(category.category)} className="relative">
+                <h3 className="text-3xl font-bold tracking-tight text-gray-900 text-center mb-12 px-4 py-6">
                   {t(category.category)}
                 </h3>
-                <div className="mt-8 grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-6">
-                  {category.items.map((service) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                  {category.services.map((service, index) => (
                     <div
                       key={t(service.name)}
-                      className="flex flex-col items-center gap-y-3 text-center"
+                      className="group relative overflow-hidden rounded-2xl bg-white shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 cursor-pointer"
+                      style={{
+                        animationDelay: `${index * 100}ms`,
+                        animation: 'fadeInUp 0.8s ease-out forwards'
+                      }}
                     >
-                      <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-100">
-                      <service.icon className="h-10 w-10 text-blue-600" />
-
+                      <div className="relative h-64 overflow-hidden">
+                        <Image
+                          src={service.image}
+                          alt={t(service.name)}
+                          width={400}
+                          height={300}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <div className="absolute bottom-4 left-4 right-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                          <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <p className="text-sm text-gray-800 font-medium">Book Now</p>
+                          </div>
+                        </div>
                       </div>
-                      <p className="font-medium text-gray-800">{t(service.name)}</p>
+                      <div className="p-6">
+                        <h4 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                          {t(service.name)}
+                        </h4>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500">Professional Service</span>
+                          <div className="flex items-center space-x-1">
+                            {[...Array(5)].map((_, i) => (
+                              <StarIcon key={i} className="h-4 w-4 text-yellow-400" />
+                            ))}
+                            <span className="text-sm text-gray-500 ml-1">4.8</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        Popular
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -423,6 +528,18 @@ export default function IndexPage() {
             ))}
           </div>
         </div>
+        <style jsx>{`
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}</style>
       </section>
         {/* How It Works Section */}
       <section className="py-24 sm:py-32">
@@ -458,7 +575,7 @@ export default function IndexPage() {
       {/* Benefits Section */}
       <section className="bg-white py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl lg:text-center">
+          <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-base font-semibold leading-7 text-blue-600">
               {t('benefitsTitle')}
             </h2>
@@ -487,6 +604,13 @@ export default function IndexPage() {
         </div>
       </section>
 
+
+      {/* Location Modal */}
+      <LocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        onLocationSelect={handleLocationSelect}
+      />
 
       {/* Login/Signup Modal */}
       {isModalOpen && (
@@ -534,17 +658,32 @@ export default function IndexPage() {
                 >
                   {t('continueButton')}
                 </button>
-                <div className="mt-4 text-center text-sm">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setModalStep('forgot-password');
-                      setPhoneNumber('');
-                    }}
-                    className="font-medium text-blue-600 hover:text-blue-500"
-                  >
-                    {t('forgotPasswordLink')}
-                  </button>
+                <div className="mt-4 text-center text-sm space-y-2">
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalStep('forgot-password');
+                        setPhoneNumber('');
+                      }}
+                      className="font-medium text-blue-600 hover:text-blue-500"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Not yet registered? </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        console.log('Switching to signup');
+                        setModalStep('signup');
+                      }}
+                      className="font-medium text-blue-600 hover:text-blue-500"
+                    >
+                      Click here to register
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -638,6 +777,102 @@ export default function IndexPage() {
                     </button>
                   )}
                 </div>
+              </div>
+            )}
+
+            {modalStep === 'signup' && (
+              <div>
+                <h3 className="text-xl font-bold">Create Account</h3>
+                <div className="mt-4 space-y-4">
+                   <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Full Name
+                    </label>
+                    <div className="relative mt-1 rounded-md shadow-sm">
+                      
+                      <input
+                        type="text"
+                        value={signupData.fullName}
+                        onChange={(e) => setSignupData({...signupData,fullName: e.target.value})}
+                        className="block w-full rounded-md border-gray-500 p-3 pl-12 focus:border-gray-700 focus:shadow-lg"
+                        placeholder="type your name here"
+                        maxLength={10}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Phone Number
+                    </label>
+                    <div className="relative mt-1 rounded-md shadow-sm">
+                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <span className="text-gray-500 sm:text-sm">+91</span>
+                      </div>
+                      <input
+                        type="tel"
+                        value={signupData.phone}
+                        onChange={(e) => setSignupData({...signupData, phone: e.target.value})}
+                        className="block w-full rounded-md border-gray-300 p-3 pl-12 focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="9876543210"
+                        maxLength={10}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={signupData.email}
+                      onChange={(e) => setSignupData({...signupData, email: e.target.value})}
+                      className="mt-1 block w-full rounded-md border-gray-300 p-3 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      value={signupData.password}
+                      onChange={(e) => setSignupData({...signupData, password: e.target.value})}
+                      className="mt-1 block w-full rounded-md border-gray-300 p-3 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Enter password"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Confirm Password
+                    </label>
+                    <input
+                      type="password"
+                      value={signupData.confirmPassword}
+                      onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
+                      className="mt-1 block w-full rounded-md border-gray-300 p-3 focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Confirm password"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSignup}
+                  disabled={!signupData.phone || !signupData.email || !signupData.password || !signupData.confirmPassword}
+                  className="mt-6 w-full rounded-md bg-[#00A2B5] p-3 font-semibold text-white shadow-sm hover:bg-[#008C9E] disabled:cursor-not-allowed disabled:bg-gray-400"
+                >
+                  Create Account
+                </button>
+                <p className="mt-4 text-center text-sm text-gray-600">
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    onClick={() => setModalStep('phone')}
+                    className="font-medium text-blue-600 hover:text-blue-500"
+                  >
+                    Sign in
+                  </button>
+                </p>
               </div>
             )}
           </div>

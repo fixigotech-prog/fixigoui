@@ -154,7 +154,7 @@
     "deliverTo": "We deliver to",
     "facebook": "Facebook",
     "fixigoGenie": "Fixigo Genie",
-    "fixigoInstamart": "Fixigo Instamart",
+    "fixigoExpert": "Fixigo Expert",
     "fixigoPlus": "Fixigo Plus",
     "help": "Help & Support",
     "instagram": "Instagram",
@@ -165,7 +165,14 @@
     "privacyPolicy": "Privacy Policy",
     "ride": "Ride with us",
     "terms": "Terms & Conditions",
-    "twitter": "Twitter"
+    "twitter": "Twitter",
+    "socialLinks": "Social Links",
+    "cities": {
+      "bangalore": "Bangalore",
+      "pune": "Pune",
+      "delhi": "Delhi",
+      "hyderabad": "Hyderabad"
+    }
   },
   "LocaleSwitcher": {
     "en": "English",
@@ -295,23 +302,20 @@
     "delete": "Delete",
     "loading": "Loading categories..."
   },
-   "SuperAdminAddOfferPage": {
-    "IndexPage": {
-      "fucTitle": "Servicios de uso frecuente"
-    },
-    "title": "Añadir nueva oferta",
-    "offerImage": "Imagen de la oferta",
-    "uploadOfferImage": "Haga clic para cargar o arrastre y suelte la imagen de la oferta",
-    "destinationUrl": "URL de destino",
-    "promocode": "Código de promoción",
-    "selectPromocode": "Seleccione un código de promoción",
-    "startDate": "Fecha de inicio",
-    "endDate": "Fecha de finalización",
-    "errorAllFields": "Por favor, rellene todos los campos obligatorios y suba una imagen.",
-    "errorCreateOffer": "Error al crear la oferta. Por favor, inténtelo de nuevo.",
-    "errorFetchPromocodes": "Error al obtener los códigos de promoción.",
-    "cancel": "Cancelar",
-    "saving": "Guardando...",
-    "saveOffer": "Guardar oferta"
-  }
+	"SuperAdminAddOfferPage": {
+		"title": "Add New Offer",
+		"offerImage": "Offer Image",
+		"uploadOfferImage": "Click to upload or drag and drop offer image",
+		"destinationUrl": "Destination URL",
+		"promocode": "Promo Code",
+		"selectPromocode": "Select a promo code",
+		"startDate": "Start Date",
+		"endDate": "End Date",
+		"errorAllFields": "Please fill all required fields and upload an image.",
+		"errorCreateOffer": "Failed to create offer. Please try again.",
+		"errorFetchPromocodes": "Failed to fetch promo codes.",
+		"cancel": "Cancel",
+		"saving": "Saving...",
+		"saveOffer": "Save Offer"
+	}
 }
