@@ -330,14 +330,14 @@ export default function IndexPage() {
                 </h2>
                 <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-3 lg:grid-cols-4">
                   {[
-                    { name: 'serviceACRepair', icon: `${domain}/images/fuservices/acrepair.jpg`, color: 'bg-blue-50', animation: 'animate-pulse' },
-                    { name: 'serviceDeepCleaning', icon: `${domain}/images/pestcontrol3.jpeg`, color: 'bg-green-50', animation: 'animate-bounce' },
-                    { name: 'servicePlumbing', icon: `${domain}/images/fuservices/plumbing.jpg`, color: 'bg-orange-50', animation: 'animate-spin' },
-                    { name: 'serviceElectrician', icon: `${domain}/images/fuservices/electrcian.jpg`, color: 'bg-yellow-50', animation: 'animate-ping' },
-                    { name: 'serviceCarpenter', icon: `${domain}/images/fuservices/Carpenter.jpg`, color: 'bg-purple-50', animation: 'animate-pulse' },
-                    { name: 'servicePainting', icon: `${domain}/images/fuservices/painting.jpg`, color: 'bg-pink-50', animation: 'animate-bounce' },
-                    { name: 'serviceApplianceRepair', icon: `${domain}/images/fuservices/appliancerepair.jpg`, color: 'bg-indigo-50', animation: 'animate-spin' },
-                    { name: 'servicePestControl', icon: `${domain}/images/fuservices/pestcontrol.jpg`, color: 'bg-red-50', animation: 'animate-ping' },
+                    { name: 'serviceACRepair', icon: `/images/fuservices/acrepair.jpg`, color: 'bg-blue-50', animation: 'animate-pulse' },
+                    { name: 'serviceDeepCleaning', icon: `/images/pestcontrol3.jpeg`, color: 'bg-green-50', animation: 'animate-bounce' },
+                    { name: 'servicePlumbing', icon: `/images/fuservices/plumbing.jpg`, color: 'bg-orange-50', animation: 'animate-spin' },
+                    { name: 'serviceElectrician', icon: `/images/fuservices/electrcian.jpg`, color: 'bg-yellow-50', animation: 'animate-ping' },
+                    { name: 'serviceCarpenter', icon: `/images/fuservices/Carpenter.jpg`, color: 'bg-purple-50', animation: 'animate-pulse' },
+                    { name: 'servicePainting', icon: `/images/fuservices/painting.jpg`, color: 'bg-pink-50', animation: 'animate-bounce' },
+                    { name: 'serviceApplianceRepair', icon: `/images/fuservices/appliancerepair.jpg`, color: 'bg-indigo-50', animation: 'animate-spin' },
+                    { name: 'servicePestControl', icon: `/images/fuservices/pestcontrol.jpg`, color: 'bg-red-50', animation: 'animate-ping' },
                   ].map((service, index) => (
                     <a
                       key={t(service.name)}
@@ -445,27 +445,27 @@ export default function IndexPage() {
               {
                 category: 'serviceCategoryCleaning',
                 services: [
-                  { name: 'serviceDeepCleaning', image: `${domain}/images/ourservices/deepcleaning.jpg` },
+                  { name: 'serviceDeepCleaning', image: `/images/ourservices/deepcleaning.jpg` },
                   { name: 'serviceBathroomCleaning', image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&h=300&fit=crop' },
-                  { name: 'serviceKitchenCleaning', image: `${domain}/images/ourservices/kitchencleaning.jpg` },
+                  { name: 'serviceKitchenCleaning', image: `/images/ourservices/kitchencleaning.jpg` },
                   { name: 'serviceSofaCleaning', image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop' },
-                  { name: 'servicePestControl', image: `${domain}/images/pestcontrol3.jpeg` }
+                  { name: 'servicePestControl', image: `/images/pestcontrol3.jpeg` }
                 ]
               },
               {
                 category: 'serviceCategoryAC',
                 services: [
-                  { name: 'serviceACRepair', image: `${domain}/images/ourservices/acreapairphoto.jpg` },
-                  { name: 'serviceApplianceRepair', image: `${domain}/images/ourservices/appliancephoto.jpg` }
+                  { name: 'serviceACRepair', image: `/images/ourservices/acreapairphoto.jpg` },
+                  { name: 'serviceApplianceRepair', image: `/images/ourservices/appliancephoto.jpg` }
                 ]
               },
               {
                 category: 'serviceCategoryHomeRepairs',
                 services: [
-                  { name: 'serviceElectrician', image: `${domain}/images/ourservices/electricianphoto.jpg` },
-                  { name: 'servicePlumbing', image: `${domain}/images/ourservices/plumbingphoto.jpg`},
-                  { name: 'serviceCarpenter', image: `${domain}/images/ourservices/carpenterphoto.jpg` },
-                  { name: 'servicePainting', image: `${domain}/images/ourservices/paintingphoto.jpg` }
+                  { name: 'serviceElectrician', image: `/images/ourservices/electricianphoto.jpg` },
+                  { name: 'servicePlumbing', image: `/images/ourservices/plumbingphoto.jpg`},
+                  { name: 'serviceCarpenter', image: `/images/ourservices/carpenterphoto.jpg` },
+                  { name: 'servicePainting', image: `/images/ourservices/paintingphoto.jpg` }
                   
                 ]
               }
