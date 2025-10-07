@@ -51,13 +51,16 @@ export default function Header({ onLoginClick, userLocation, onLocationChange }:
   );
 
   return (
-    <header className="sticky top-0 z-10 bg-white/80 shadow-sm backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center justify-between p-4">
-        <div className="flex items-center gap-8 pr-8">
+    <header className="sticky top-0 left-0 right-0 z-10 pl-10 pr-10 bg-white/80 shadow-sm backdrop-blur-md">
+      <div className="mx-auto flex items-center justify-between px-1 py-4 max-w-full">
+        <div className="flex items-center pl-2">
           <a href="#" className="text-2xl font-bold text-gray-900">
-            <Image src="/images/logo2.svg" width="130" height="28" alt="" />
+            <Image src="/images/logo/logo.png" width="120" height="30" alt="" />
           </a>
-          <nav className="hidden gap-6 md:flex">
+        </div>
+        
+        <div className="flex items-center justify-center flex-1 ">
+          <nav className="hidden gap-4 md:flex">
             <a href="#" className="text-sm font-semibold text-gray-600 hover:text-gray-900">
               {t('serviceACRepair')}
             </a>
@@ -70,14 +73,14 @@ export default function Header({ onLoginClick, userLocation, onLocationChange }:
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 pr-2">
           {/* Service Search Box */}
-          <div className="relative hidden md:block">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <div className="relative hidden lg:block">
+            <MagnifyingGlassIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search services..."
-              className="w-64 pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:border-gray-400 focus:shadow-md focus:outline-none"
+              placeholder="Search..."
+              className="w-48 pl-7 pr-2 py-1 text-xs border border-gray-200 rounded focus:border-gray-400 focus:outline-none"
             />
           </div>
 
@@ -85,13 +88,13 @@ export default function Header({ onLoginClick, userLocation, onLocationChange }:
           <div className="relative">
             <button
               onClick={() => setShowCityDropdown(!showCityDropdown)}
-              className="flex items-center space-x-2 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:border-gray-300 focus:border-gray-400 focus:shadow-md focus:outline-none"
+              className="flex items-center space-x-1 px-1 py-1 text-xs border border-gray-200 rounded hover:border-gray-300 focus:border-gray-400 focus:outline-none"
             >
-              <MapPinIcon className="h-4 w-4 text-gray-500" />
-              <span className="text-gray-700">
+              <MapPinIcon className="h-3 w-5 text-gray-500" />
+              <span className="text-xs text-gray-700 max-w-24 truncate">
                 {userLocation?.address || 'Select City'}
               </span>
-              <ChevronDownIcon className="h-4 w-4 text-gray-500" />
+              <ChevronDownIcon className="h-3 w-3 text-gray-500" />
             </button>
 
             {showCityDropdown && (
@@ -104,7 +107,7 @@ export default function Header({ onLoginClick, userLocation, onLocationChange }:
                       placeholder="Search cities..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:border-gray-400 focus:shadow-md focus:outline-none"
+                      className="w-72 pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:border-gray-400 focus:shadow-md focus:outline-none"
                     />
                   </div>
                 </div>
@@ -127,7 +130,7 @@ export default function Header({ onLoginClick, userLocation, onLocationChange }:
           <button
             type="button"
             onClick={onLoginClick}
-            className="rounded-md bg-[#00A2B5] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#008C9E]"
+            className="rounded bg-[#00A2B5] px-3 py-1 text-xs font-semibold text-white hover:bg-[#008C9E]"
           >
             {t('loginSignup')}
           </button>

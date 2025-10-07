@@ -150,7 +150,7 @@ export default function CategoriesPage() {
     formData.append('upload_preset', 'your_upload_preset');
 
     try {
-      const response = await axios.post(
+      const response = await axios.post<{ secure_url: string }>(
         'https://api.cloudinary.com/v1_1/your_cloud_name/image/upload',
         formData
       );

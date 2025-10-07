@@ -39,14 +39,15 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-[#f8f9fa] text-gray-600 py-12">
+    <footer className=" bg-[#f8f9fa] text-gray-600 py-6">
      <div className="flex flex-row items-center justify-center">
       
      </div>
      <div>
        <div className="flex flex-row mx-auto px-4">
-        <div className=' flex items-center pr-4'>
-          <Image src="/images/logo2.svg" width="200" height="50" alt="" />
+        <div className=' flex items-center justify-center pr-4'>
+          
+          <Image src="/images/logo/logo.png" width="160" height="36" alt="" />
         </div>
         <div className="grid grid-cols-1 ml-16 md:grid-cols-5 gap-8">
           <div>
