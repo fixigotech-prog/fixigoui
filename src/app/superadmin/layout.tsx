@@ -16,11 +16,14 @@ import LocaleSwitcher from '@/components/LocaleSwitcher';
 
 const navigation = [
   {name: 'dashboard', href: '/superadmin/dashboard', icon: HomeIcon},
-  {name: 'bookings', href: '/superadmin/bookings', icon: FolderIcon},
+  {name: 'categories', href: '/superadmin/categories', icon: Cog6ToothIcon},
+  {name: 'subCategories', href: '/superadmin/subcategories', icon: Cog6ToothIcon},
   {name: 'users', href: '/superadmin/users', icon: UsersIcon},
   {name: 'services', href: '/superadmin/services', icon: Cog6ToothIcon},
-  {name: 'categories', href: '/superadmin/categories', icon: Cog6ToothIcon},
-  {name: 'subCategories', href: '/superadmin/subCategories', icon: Cog6ToothIcon},
+  {name: 'frequentlyusedservice', href: '/superadmin/frequentlyservices', icon: Cog6ToothIcon},
+  {name: 'bookings', href: '/superadmin/bookings', icon: FolderIcon},
+  {name: 'offers', href: '/superadmin/offers', icon: Cog6ToothIcon},
+  {name: 'promocodes', href: '/superadmin/promocodes', icon: Cog6ToothIcon},
   {name: 'reports', href: '#', icon: ChartBarIcon} // Placeholder
 ];
 

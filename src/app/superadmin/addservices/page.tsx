@@ -36,13 +36,8 @@ export default function AddServicePage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
-  const [price, setPrice] = useState(0);
-  const [term, setTerm] = useState('');
-  const [termUnit, setTermUnit] = useState('');
   const [isActive, setIsActive] = useState(true);
-  const [serviceDetails, setServiceDetails] = useState<ServiceDetail[]>([
-    { id: '1', name: '', description: '', lang: 'en' }
-  ]);
+  const [serviceDetails, setServiceDetails] = useState<ServiceDetail>({ id: '1', name: '', description: '', lang: 'en' });
   const [servicePricing, setServicePricing] = useState<ServicePricing[]>([
     { id: '1', price: 0, term: '', termUnit: '', lang: 'en' }
   ]);
@@ -67,21 +62,8 @@ export default function AddServicePage() {
     setImageUrl(result.secure_url);
   };
 
-  const addServiceDetail = () => {
-    const newId = (serviceDetails.length + 1).toString();
-    setServiceDetails([...serviceDetails, { id: newId, name: '', description: '', lang: 'en' }]);
-  };
-
-  const removeServiceDetail = (id: string) => {
-    if (serviceDetails.length > 1) {
-      setServiceDetails(serviceDetails.filter(detail => detail.id !== id));
-    }
-  };
-
-  const updateServiceDetail = (id: string, field: keyof ServiceDetail, value: string) => {
-    setServiceDetails(serviceDetails.map(detail => 
-      detail.id === id ? { ...detail, [field]: value } : detail
-    ));
+  const updateServiceDetail = (field: keyof ServiceDetail, value: string) => {
+    setServiceDetails(prev => ({ ...prev, [field]: value }));
   };
 
   const addServicePricing = () => {
@@ -112,10 +94,9 @@ export default function AddServicePage() {
       return;
     }
 
-    const validDetails = serviceDetails.filter(detail => detail.name && detail.description);
     const validPricing = servicePricing.filter(pricing => pricing.price > 0 && pricing.termUnit);
 
-    if (validDetails.length === 0) {
+    if (!serviceDetails.name || !serviceDetails.description) {
       setError('At least one service detail is required');
       setIsSubmitting(false);
       return;
@@ -124,17 +105,17 @@ export default function AddServicePage() {
     try {
       const serviceData = {
         categoryId: parseInt(selectedCategoryId),
-        price,
-        term,
-        termUnit,
+        price: validPricing[0]?.price || 0,
+        term: validPricing[0]?.term || '1',
+        termUnit: validPricing[0]?.termUnit || 'hour',
         isActive,
         imageUrl,
         videoUrl,
-        details: validDetails.map(detail => ({
-          name: detail.name,
-          description: detail.description,
-          lang: detail.lang
-        })),
+        details: {
+          name: serviceDetails.name,
+          description: serviceDetails.description,
+          lang: serviceDetails.lang
+        },
         pricing: validPricing.map(pricing => ({
           price: pricing.price,
           term: pricing.term,
@@ -158,166 +139,77 @@ export default function AddServicePage() {
     <div className="container mx-auto max-w-4xl rounded-lg bg-white p-8 shadow-md">
       <h1 className="mb-6 text-2xl font-bold text-gray-900">Add New Service</h1>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
-          <select
-            id="category"
-            value={selectedCategoryId}
-            onChange={(e) => setSelectedCategoryId(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none sm:text-sm"
-            required
-          >
-            <option value="">Select Category</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-8">
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-          <div>
-            <label htmlFor="price" className="block text-sm font-medium text-gray-700">Base Price</label>
-            <input
-              type="number"
-              id="price"
-              min="0"
-              value={price}
-              onChange={(e) => setPrice(parseInt(e.target.value) || 0)}
-              className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none sm:text-sm"
-            />
-          </div>
-          <div>
-            <label htmlFor="term" className="block text-sm font-medium text-gray-700">Term</label>
-            <input
-              type="text"
-              id="term"
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              placeholder="e.g., 1, 2-3"
-              className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none sm:text-sm"
-            />
-          </div>
-          <div>
-            <label htmlFor="termUnit" className="block text-sm font-medium text-gray-700">Term Unit</label>
-            <select
-              id="termUnit"
-              value={termUnit}
-              onChange={(e) => setTermUnit(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none sm:text-sm"
-            >
-              <option value="">Select Unit</option>
-              <option value="hour">Hour</option>
-              <option value="day">Day</option>
-              <option value="week">Week</option>
-              <option value="month">Month</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Service Image</label>
-            <div className="mt-1">
-              <CloudinaryUploadWidget
-                cloudName={process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!}
-                uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!}
-                onUploadSuccess={handleUploadSuccess}
-              >
-                {({ open, isLoading }) => (
-                  <button
-                    type="button"
-                    onClick={open}
-                    disabled={isLoading}
-                    className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-                  >
-                    {isLoading ? 'Loading...' : 'Upload Service Image'}
-                  </button>
-                )}
-              </CloudinaryUploadWidget>
-            </div>
-            {imageUrl && <img src={imageUrl} alt="Service preview" className="mt-4 h-32 w-auto rounded-md" />}
-          </div>
-          <div>
-            <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700">Video URL (Optional)</label>
-            <input
-              type="url"
-              id="videoUrl"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://..."
-              className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none sm:text-sm"
-            />
-          </div>
-        </div>
-
-        <div>
+         {/* Service Details */}
+        <div className="bg-gray-50 p-6 rounded-lg">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Service Details</h3>
-            <button
-              type="button"
-              onClick={addServiceDetail}
-              className="rounded-md bg-cyan-600 px-3 py-2 text-sm font-medium text-white hover:bg-cyan-700"
-            >
-              Add Detail
-            </button>
+            <h2 className="text-lg font-semibold text-gray-900">Service Details</h2>
           </div>
           
-          <div className="space-y-4">
-            {serviceDetails.map((detail, index) => (
-              <div key={detail.id} className="rounded-lg border border-gray-200 p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-medium text-gray-700">Detail {index + 1}</h4>
-                  {serviceDetails.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeServiceDetail(detail.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700">Name</label>
-                    <input
-                      type="text"
-                      value={detail.name}
-                      onChange={(e) => updateServiceDetail(detail.id, 'name', e.target.value)}
-                      className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700">Language</label>
-                    <select
-                      value={detail.lang}
-                      onChange={(e) => updateServiceDetail(detail.id, 'lang', e.target.value)}
-                      className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none text-sm"
-                    >
-                      <option value="en">English</option>
-                      <option value="ar">Arabic</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700">Description</label>
-                    <textarea
-                      rows={2}
-                      value={detail.description}
-                      onChange={(e) => updateServiceDetail(detail.id, 'description', e.target.value)}
-                      className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none text-sm"
-                    />
-                  </div>
-                </div>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div>
+                <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
+                <select
+                  id="category"
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none sm:text-sm"
+                  required
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
               </div>
-            ))}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Language</label>
+                <select
+                  value={serviceDetails.lang}
+                  onChange={(e) => updateServiceDetail('lang', e.target.value)}
+                  className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none text-sm"
+                >
+                  <option value="en">English</option>
+                  <option value="ar">Arabic</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Name</label>
+              <input
+                type="text"
+                value={serviceDetails.name}
+                onChange={(e) => updateServiceDetail('name', e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                rows={4}
+                value={serviceDetails.description}
+                onChange={(e) => updateServiceDetail('description', e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none text-sm"
+              />
+            </div>
+            <div className="flex items-center">
+              <input
+                id="isActive"
+                type="checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
+              />
+              <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">Service is active</label>
+            </div>
           </div>
         </div>
-
-        <div>
+         {/* Pricing */}
+        <div className="bg-gray-50 p-6 rounded-lg">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Additional Pricing</h3>
+            <h2 className="text-lg font-semibold text-gray-900">Pricing Options</h2>
             <button
               type="button"
               onClick={addServicePricing}
@@ -394,19 +286,49 @@ export default function AddServicePage() {
             ))}
           </div>
         </div>
-
-        <div className="flex items-center">
-          <input
-            id="isActive"
-            type="checkbox"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-cyan-600 focus:ring-cyan-500"
-          />
-          <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">
-            Service is active
-          </label>
+        {/* Media */}
+        <div className="bg-gray-50 p-6 rounded-lg">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Media</h2>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Service Image</label>
+              <div className="mt-1">
+                <CloudinaryUploadWidget
+                  cloudName={process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME!}
+                  uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!}
+                  onUploadSuccess={handleUploadSuccess}
+                >
+                  {({ open, isLoading }) => (
+                    <button
+                      type="button"
+                      onClick={open}
+                      disabled={isLoading}
+                      className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+                    >
+                      {isLoading ? 'Loading...' : 'Upload Service Image'}
+                    </button>
+                  )}
+                </CloudinaryUploadWidget>
+              </div>
+              {imageUrl && <img src={imageUrl} alt="Service preview" className="mt-4 h-32 w-auto rounded-md" />}
+            </div>
+            <div>
+              <label htmlFor="videoUrl" className="block text-sm font-medium text-gray-700">Video URL (Optional)</label>
+              <input
+                type="url"
+                id="videoUrl"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://..."
+                className="mt-1 block w-full rounded-md border border-gray-200 focus:border-gray-400 focus:shadow-md focus:outline-none sm:text-sm"
+              />
+            </div>
+          </div>
         </div>
+
+       
+
+       
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 

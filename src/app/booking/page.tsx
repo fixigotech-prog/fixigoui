@@ -88,6 +88,13 @@ export default function BookingPage() {
     fetchServices();
     fetchPromocodes();
     loadCart();
+    
+    const savedLocation = localStorage.getItem('userLocation');
+    if (savedLocation) {
+      const parsedLocation = JSON.parse(savedLocation);
+      setLocation(parsedLocation);
+    }
+
   }, []);
 
   useEffect(() => {

@@ -33,6 +33,7 @@ import 'slick-carousel/slick/slick-theme.css';
 import Footer from '@/components/Footer';
 import LocationModal from '@/components/LocationModal';
 import Header from '@/components/Header';
+import GoogleMap from '@/components/GoogleMap';
 const benefits = [
   {
     name: 'benefitConvenienceTitle',
@@ -150,6 +151,16 @@ interface Offer {
   promocode: Promocode;
 }
 
+interface FrequentService {
+  id: number;
+  serviceId: number;
+  serviceName: string;
+  usageCount: number;
+  imageUrl: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
 
 
 export default function IndexPage() {
@@ -157,6 +168,7 @@ export default function IndexPage() {
   const router = useRouter();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [frequentServices, setFrequentServices] = useState<FrequentService[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalStep, setModalStep] = useState<
     'phone' | 'otp' | 'forgot-password' | 'signup'
@@ -181,12 +193,29 @@ export default function IndexPage() {
     const fetchOffers = async () => {
       try {
         const response = await axios.get<Offer[]>(`${API_URL}/api/offers/all`);
-        setOffers(response.data);
+        if (response.data && Array.isArray(response.data)) {
+          setOffers(response.data);
+        }
       } catch (error) {
         console.error('Failed to fetch offers:', error);
+        setOffers([]);
       }
     };
+    
+    const fetchFrequentServices = async () => {
+      try {
+        const response = await axios.get<FrequentService[]>('https://fixigoapi.onrender.com/api/frequent-services');
+        if (response.data && Array.isArray(response.data)) {
+          setFrequentServices(response.data.filter(service => service.isActive));
+        }
+      } catch (error) {
+        console.error('Failed to fetch frequent services:', error);
+        setFrequentServices([]);
+      }
+    };
+    
     fetchOffers();
+    fetchFrequentServices();
     
     // Show location modal on page load if location not already set
     const savedLocation = localStorage.getItem('userLocation');
@@ -318,7 +347,7 @@ export default function IndexPage() {
         onLocationChange={handleLocationSelect}
       />
 
-      {/* Hero Section */}
+      
       <main>
         <div className="relative isolate bg-gradient-to-r from-blue-400 via-blue-600 to-blue-800">
           <div className="overflow-hidden pt-14">
@@ -329,19 +358,10 @@ export default function IndexPage() {
                   {t("fucTitle")}
                 </h2>
                 <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-3 lg:grid-cols-4">
-                  {[
-                    { name: 'serviceACRepair', icon: `/images/fuservices/acrepair.jpg`, color: 'bg-blue-50', animation: 'animate-pulse' },
-                    { name: 'serviceDeepCleaning', icon: `/images/pestcontrol3.jpeg`, color: 'bg-green-50', animation: 'animate-bounce' },
-                    { name: 'servicePlumbing', icon: `/images/fuservices/plumbing.jpg`, color: 'bg-orange-50', animation: 'animate-spin' },
-                    { name: 'serviceElectrician', icon: `/images/fuservices/electrcian.jpg`, color: 'bg-yellow-50', animation: 'animate-ping' },
-                    { name: 'serviceCarpenter', icon: `/images/fuservices/Carpenter.jpg`, color: 'bg-purple-50', animation: 'animate-pulse' },
-                    { name: 'servicePainting', icon: `/images/fuservices/painting.jpg`, color: 'bg-pink-50', animation: 'animate-bounce' },
-                    { name: 'serviceApplianceRepair', icon: `/images/fuservices/appliancerepair.jpg`, color: 'bg-indigo-50', animation: 'animate-spin' },
-                    { name: 'servicePestControl', icon: `/images/fuservices/pestcontrol.jpg`, color: 'bg-red-50', animation: 'animate-ping' },
-                  ].map((service, index) => (
+                  {frequentServices.map((service, index) => (
                     <a
-                      key={t(service.name)}
-                      href="#"
+                      key={service.id}
+                      href={`/booking?serviceId=${service.serviceId}`}
                       className="group flex flex-col items-center text-center transition-all duration-300 hover:scale-105 object-cover"
                       style={{
                         animationDelay: `${index * 150}ms`,
@@ -349,11 +369,11 @@ export default function IndexPage() {
                       }}
                     >
                       <img 
-                        src={service.icon} 
-                        alt={t(service.name)}
+                        src={service.imageUrl} 
+                        alt={service.serviceName}
                         className="w-[120px] h-[120px] object-cover rounded-full shadow-lg group-hover:shadow-xl transition-all duration-300"
                       />
-                      <p className="text-xs font-bold text-white mt-2 group-hover:text-blue-200 transition-colors duration-300">{t(service.name)}</p>
+                      <p className="text-xs font-bold text-white mt-2 group-hover:text-blue-200 transition-colors duration-300">{service.serviceName}</p>
                     </a>
                   ))}
                 </div>
@@ -567,6 +587,35 @@ export default function IndexPage() {
           </div>
         </div>
       </section>
+      {/* Service Areas Map Section */}
+      <section className="bg-gray-50 py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+              Our Service Areas
+            </h2>
+            <p className="mt-6 text-lg leading-8 text-gray-600">
+              We provide quality home services across major cities. Find us near you.
+            </p>
+          </div>
+          <div className="mt-16">
+            <GoogleMap 
+              center={{ lat: 28.6139, lng: 77.2090 }}
+              zoom={6}
+              height="500px"
+              markers={[
+                { lat: 28.6139, lng: 77.2090, title: 'Delhi' },
+                { lat: 19.0760, lng: 72.8777, title: 'Mumbai' },
+                { lat: 12.9716, lng: 77.5946, title: 'Bangalore' },
+                { lat: 13.0827, lng: 80.2707, title: 'Chennai' },
+                { lat: 22.5726, lng: 88.3639, title: 'Kolkata' },
+                { lat: 17.3850, lng: 78.4867, title: 'Hyderabad' }
+              ]}
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Benefits Section */}
       <section className="bg-white py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -599,13 +648,7 @@ export default function IndexPage() {
         </div>
       </section>
 
-
-      {/* Location Modal */}
-      <LocationModal
-        isOpen={isLocationModalOpen}
-        onClose={() => setIsLocationModalOpen(false)}
-        onLocationSelect={handleLocationSelect}
-      />
+      <LocationModal isOpen={isLocationModalOpen} onClose={() => setIsLocationModalOpen(false)} onLocationSelect={handleLocationSelect} />
 
       {/* Login/Signup Modal */}
       {isModalOpen && (
@@ -780,7 +823,7 @@ export default function IndexPage() {
                 <h3 className="text-xl font-bold">Create Account</h3>
                 <div className="mt-4 space-y-4">
                    <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700" >
                       Full Name
                     </label>
                     <div className="relative mt-1 rounded-md shadow-sm">
@@ -789,7 +832,7 @@ export default function IndexPage() {
                         type="text"
                         value={signupData.fullName}
                         onChange={(e) => setSignupData({...signupData,fullName: e.target.value})}
-                        className="block w-full rounded-md border-gray-500 p-3 pl-12 focus:border-gray-700 focus:shadow-lg"
+                        className="block w-full rounded-md border-gray-500 p-3  focus:border-gray-700 focus:shadow-lg"
                         placeholder="type your name here"
                         maxLength={10}
                       />
@@ -806,7 +849,7 @@ export default function IndexPage() {
                       <input
                         type="tel"
                         value={signupData.phone}
-                        onChange={(e) => setSignupData({...signupData, phone: e.target.value})}
+                        onChange={(e) => setSignupData({ ...signupData, phone: e.target.value })}
                         className="block w-full rounded-md border-gray-300 p-3 pl-12 focus:border-blue-500 focus:ring-blue-500"
                         placeholder="9876543210"
                         maxLength={10}
@@ -820,7 +863,7 @@ export default function IndexPage() {
                     <input
                       type="email"
                       value={signupData.email}
-                      onChange={(e) => setSignupData({...signupData, email: e.target.value})}
+                      onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
                       className="mt-1 block w-full rounded-md border-gray-300 p-3 focus:border-blue-500 focus:ring-blue-500"
                       placeholder="your@email.com"
                     />
@@ -832,7 +875,7 @@ export default function IndexPage() {
                     <input
                       type="password"
                       value={signupData.password}
-                      onChange={(e) => setSignupData({...signupData, password: e.target.value})}
+                      onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
                       className="mt-1 block w-full rounded-md border-gray-300 p-3 focus:border-blue-500 focus:ring-blue-500"
                       placeholder="Enter password"
                     />
@@ -844,7 +887,7 @@ export default function IndexPage() {
                     <input
                       type="password"
                       value={signupData.confirmPassword}
-                      onChange={(e) => setSignupData({...signupData, confirmPassword: e.target.value})}
+                      onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
                       className="mt-1 block w-full rounded-md border-gray-300 p-3 focus:border-blue-500 focus:ring-blue-500"
                       placeholder="Confirm password"
                     />

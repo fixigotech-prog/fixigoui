@@ -202,7 +202,11 @@
     "services": "Services",
     "reports": "Reports",
     "categories": "Categories",
-    "subCategories": "Sub-Categories"
+    "subCategories": "Sub-Categories",
+    "frequentlyusedservice":"Frequently Used Services",
+    "promocodes": "Promo Codes",
+    "offers": "Offers",
+    "logout": "Logout"
   },
   "SuperAdminDashboardPage": {
     "totalRevenue": "Total Revenue",
