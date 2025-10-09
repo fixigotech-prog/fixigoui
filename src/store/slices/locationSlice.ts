@@ -4,6 +4,7 @@ import axios from 'axios';
 interface City {
   id: number;
   city: string;
+  state: string;
   lat: number;
   lng: number;
 }

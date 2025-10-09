@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import LocationModal from '@/components/LocationModal';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchAddressBook, addToAddressBook, fetchCitiesStates, setSelectedAddress } from '@/store/slices/bookingSlice';
+import { fetchCities } from '@/store/slices/locationSlice';
 import { setSelectedLocation } from '@/store/slices/locationSlice';
 
 interface ServiceDetail {
@@ -98,7 +99,11 @@ export default function BookingPage() {
   });
   
   const dispatch = useAppDispatch();
-  const { addressBook, cities, states, selectedAddress } = useAppSelector(state => state.booking);
+  const { addressBook, selectedAddress } = useAppSelector(state => state.booking);
+  const { cities } = useAppSelector(state => state.location || { cities: [] });
+  
+  // Extract unique states from cities
+  const states = cities ? [...new Set(cities.map(city => city.state))].filter(Boolean) : [];
 
   const tipOptions = [0, 50, 100, 150, 200];
 
@@ -107,7 +112,7 @@ export default function BookingPage() {
     fetchPromocodes();
     loadCart();
     dispatch(fetchAddressBook());
-    dispatch(fetchCitiesStates());
+    dispatch(fetchCities());
     
     const savedLocation = localStorage.getItem('userLocation');
     if (savedLocation) {
@@ -393,8 +398,8 @@ export default function BookingPage() {
                     >
                       <option value="">Select City</option>
                       {cities && cities.length > 0 ? cities.map((city) => (
-                        <option key={typeof city === 'string' ? city : city.city} value={typeof city === 'string' ? city : city.city}>
-                          {typeof city === 'string' ? city : city.city}
+                        <option key={city.id} value={city.city}>
+                          {city.city}
                         </option>
                       )) : (
                         <option disabled>No cities available</option>
@@ -410,8 +415,8 @@ export default function BookingPage() {
                     >
                       <option value="">Select State</option>
                       {states && states.length > 0 ? states.map((state) => (
-                        <option key={typeof state === 'string' ? state : state.state} value={typeof state === 'string' ? state : state.state}>
-                          {typeof state === 'string' ? state : state.state}
+                        <option key={state} value={state}>
+                          {state}
                         </option>
                       )) : (
                         <option disabled>No states available</option>
