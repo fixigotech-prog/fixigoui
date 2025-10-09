@@ -34,6 +34,14 @@ import Footer from '@/components/Footer';
 import LocationModal from '@/components/LocationModal';
 import Header from '@/components/Header';
 import GoogleMap from '@/components/GoogleMap';
+import HeroSection from '@/components/sections/HeroSection';
+import OffersSection from '@/components/sections/OffersSection';
+import ServicesSection from '@/components/sections/ServicesSection';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchOffers } from '@/store/slices/offersSlice';
+import { fetchCategories } from '@/store/slices/categoriesSlice';
+import { fetchCities } from '@/store/slices/locationSlice';
+import { fetchFrequentServices } from '@/store/slices/frequentServicesSlice';
 const benefits = [
   {
     name: 'benefitConvenienceTitle',
@@ -185,37 +193,22 @@ export default function IndexPage() {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const [domain, setDomain] = useState('');
- const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+  const dispatch = useAppDispatch();
+  const { offers: reduxOffers, loading: offersLoading } = useAppSelector(state => state.offers);
+  const { categories, loading: categoriesLoading } = useAppSelector(state => state.categories);
+  const { cities, loading: citiesLoading } = useAppSelector(state => state.location);
+  const { services: reduxFrequentServices, loading: frequentServicesLoading } = useAppSelector(state => state.frequentServices);
 
  useEffect(() => {
     setDomain(window.location.origin);
     
-    const fetchOffers = async () => {
-      try {
-        const response = await axios.get<Offer[]>(`${API_URL}/api/offers/all`);
-        if (response.data && Array.isArray(response.data)) {
-          setOffers(response.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch offers:', error);
-        setOffers([]);
-      }
-    };
-    
-    const fetchFrequentServices = async () => {
-      try {
-        const response = await axios.get<FrequentService[]>('https://fixigoapi.onrender.com/api/frequent-services');
-        if (response.data && Array.isArray(response.data)) {
-          setFrequentServices(response.data.filter(service => service.isActive));
-        }
-      } catch (error) {
-        console.error('Failed to fetch frequent services:', error);
-        setFrequentServices([]);
-      }
-    };
-    
-    fetchOffers();
-    fetchFrequentServices();
+    // Always fetch data on page load
+    dispatch(fetchOffers());
+    dispatch(fetchCategories());
+    dispatch(fetchCities());
+    dispatch(fetchFrequentServices());
     
     // Show location modal on page load if location not already set
     const savedLocation = localStorage.getItem('userLocation');
@@ -224,7 +217,7 @@ export default function IndexPage() {
     } else {
       setUserLocation(JSON.parse(savedLocation));
     }
-  }, []);
+  }, [dispatch]);
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (modalStep === 'otp' && timer > 0) {
@@ -347,110 +340,65 @@ export default function IndexPage() {
         onLocationChange={handleLocationSelect}
       />
 
-      
-      <main>
-        <div className="relative isolate bg-gradient-to-r from-blue-400 via-blue-600 to-blue-800">
-          <div className="overflow-hidden pt-14">
-            <div className="mx-auto grid  grid-cols-1 gap-x-8 gap-y-16 px-6 lg:grid-cols-2">
-              <div className="flex flex-col justify-center py-10 text-center">
-                <h2 className="text-2xl font-bold text-white sm:text-3xl ">
-                  
-                  {t("fucTitle")}
-                </h2>
-                <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-3 lg:grid-cols-4">
-                  {frequentServices.map((service, index) => (
-                    <a
-                      key={service.id}
-                      href={`/booking?serviceId=${service.serviceId}`}
-                      className="group flex flex-col items-center text-center transition-all duration-300 hover:scale-105 object-cover"
-                      style={{
-                        animationDelay: `${index * 150}ms`,
-                        animation: 'fadeInUp 0.8s ease-out forwards'
-                      }}
-                    >
-                      <img 
-                        src={service.imageUrl} 
-                        alt={service.serviceName}
-                        className="w-[120px] h-[120px] object-cover rounded-full shadow-lg group-hover:shadow-xl transition-all duration-300"
-                      />
-                      <p className="text-xs font-bold text-white mt-2 group-hover:text-blue-200 transition-colors duration-300">{service.serviceName}</p>
-                    </a>
-                  ))}
-                </div>
-                <style jsx>{`
-                  @keyframes fadeInUp {
-                    from {
-                      opacity: 0;
-                      transform: translateY(30px);
-                    }
-                    to {
-                      opacity: 1;
-                      transform: translateY(0);
-                    }
-                  }
-                `}</style>
-              </div>
-              <div className="mx-auto max-w-7xl px-6 pb-16 pt-10 sm:pt-16 lg:px-8 lg:pt-20">
-                <div className="mx-auto max-w-2xl text-center">
-                  <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                    {t('title')}
-                  </h1>
-                  <p className="mt-6 text-lg leading-8 text-gray-200">
-                    {t('subtitle')}
-                  </p>
-                </div>
-                <div className="mt-16 grid grid-cols-1 gap-8 sm:mt-24 md:grid-cols-3">
-                  <Image
-                    src="/images/cleaning-main.png"
-                    alt="Technician working on an air conditioner"
-                    width={400} height={300}
-                    className="aspect-[4/3] w-full rounded-lg object-cover shadow-lg"
-                  />
-                  <Image
-                    src="/images/Pest-control.jpeg"
-                    width={400} height={300}
-                    style={{ objectFit: 'fill' }}
-                    alt="Person cleaning a window"
-                    className="aspect-[4/3] w-full rounded-lg object-cover shadow-lg"
-                  />
-                  <Image
-                    src="/images/ac-repair.jpeg"
-                    alt="Electrician working on a circuit breaker"
-                    width={400} height={300}
-                    className="aspect-[4/3] w-full rounded-lg object-cover shadow-lg"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
+      <HeroSection frequentServices={reduxFrequentServices} />
 
-      {/* Offers Section */}
-      <section className="bg-gray-100 py-16">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          
-          <div className="mt-16">
-            <Slider {...sliderSettings}>
-              {staticOffers.map((offer, index) => (
-                <div key={offer.id} className="px-2">
-                  <div className="relative">
+      <OffersSection />
+      
+      {/* Frequently Used Services Section */}
+      {reduxFrequentServices && reduxFrequentServices.length > 0 && (
+        <section className="bg-gray-50 py-16 sm:py-20">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl text-center">
+              <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                Frequently Used Services
+              </h2>
+              <p className="mt-6 text-lg leading-8 text-gray-600">
+                Popular services chosen by our customers
+              </p>
+            </div>
+            <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-4">
+              {reduxFrequentServices.slice(0, 8).map((service) => (
+                <div
+                  key={service.id}
+                  className="group relative overflow-hidden rounded-xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                >
+                  <div className="relative h-48 overflow-hidden">
                     <Image
-                      src={offer.imageUrl}
-                      alt=""
-                      width={480}
-                      height={220}
-                      className="rounded-lg object-cover"
+                      src={service.imageUrl || '/images/default-service.jpg'}
+                      alt={service.serviceName}
+                      width={300}
+                      height={200}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                    <div className="absolute top-3 right-3 bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                      Popular
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      {service.serviceName}
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Used {service.usageCount} times
+                    </p>
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center space-x-1">
+                        {[...Array(5)].map((_, i) => (
+                          <StarIcon key={i} className="h-4 w-4 text-yellow-400" />
+                        ))}
+                        <span className="text-sm text-gray-500 ml-1">4.8</span>
+                      </div>
+                      <button className="text-blue-600 text-sm font-medium hover:text-blue-700">
+                        Book Now
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
-            </Slider>
+            </div>
           </div>
-        </div>
-      </section>
-      
-    
+        </section>
+      )}
 
       {/* Our Services Section */}
       <section className="bg-white py-24 sm:py-32">
@@ -604,11 +552,7 @@ export default function IndexPage() {
               zoom={6}
               height="500px"
               markers={[
-                { lat: 28.6139, lng: 77.2090, title: 'Delhi' },
-                { lat: 19.0760, lng: 72.8777, title: 'Mumbai' },
                 { lat: 12.9716, lng: 77.5946, title: 'Bangalore' },
-                { lat: 13.0827, lng: 80.2707, title: 'Chennai' },
-                { lat: 22.5726, lng: 88.3639, title: 'Kolkata' },
                 { lat: 17.3850, lng: 78.4867, title: 'Hyderabad' }
               ]}
             />

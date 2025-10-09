@@ -10,7 +10,7 @@ const nextConfig = {
   output: "export",  // Uncomment the following line only for building purposes. By default, this line should remain commented out.
   trailingSlash: true,
   reactStrictMode: false,
-  allowedDevOrigins: ["http://localhost:3000","http://localhost:3001"],
+  allowedDevOrigins: ["http://localhost:4000","http://localhost:3001","http://localhost:3000"],
   // swcMinify: true,
   basePath: isProd ? "" : undefined,
   assetPrefix: isProd ? "" : undefined,

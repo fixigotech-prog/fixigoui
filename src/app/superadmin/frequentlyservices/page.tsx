@@ -55,7 +55,7 @@ export default function FrequentlyUsedServicesPage() {
 
   const fetchAllServices = async () => {
     try {
-      const response = await axios.get<Service[]>('https://fixigoapi.onrender.com/api/services');
+      const response = await axios.get<Service[]>(`${API_URL}/api/services`);
       setAllServices(response.data);
     } catch (error) {
       console.error('Error fetching all services:', error);

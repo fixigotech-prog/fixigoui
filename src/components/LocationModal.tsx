@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { XMarkIcon, MapPinIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
+import { XMarkIcon, MapPinIcon } from '@heroicons/react/24/outline';
 
 declare global {
   interface Window {
     google: any;
     initMap: () => void;
+    googleMapsLoaded?: boolean;
   }
 }
 
@@ -17,82 +17,86 @@ interface LocationModalProps {
   onLocationSelect: (location: { lat: number; lng: number; address: string }) => void;
 }
 
-interface City {
-  id: number;
-  city: string;
-  lat: number;
-  lng: number;
-}
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// Cache for Google Maps script loading
+let googleMapsPromise: Promise<void> | null = null;
 
 export default function LocationModal({ isOpen, onClose, onLocationSelect }: LocationModalProps) {
-  const [cities, setCities] = useState<City[]>([]);
-  const [filteredCities, setFilteredCities] = useState<City[]>([]);
-  const [selectedCity, setSelectedCity] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showMap, setShowMap] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [hasSkippedBefore, setHasSkippedBefore] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const markerRef = useRef<any>(null);
 
   useEffect(() => {
     if (isOpen) {
-      fetchCities();
-      loadGoogleMaps();
-      // Auto-detect location when modal opens
-      setTimeout(() => {
-        getCurrentLocation();
-      }, 1000);
+      // Check if user has skipped location before
+      const skipped = localStorage.getItem('locationSkipped');
+      setHasSkippedBefore(skipped === 'true');
+      
+      loadGoogleMaps().then(() => {
+        if (mapRef.current) {
+          initializeMap();
+          // Auto-detect location when modal opens
+          setTimeout(() => {
+            getCurrentLocation();
+          }, 500);
+        }
+      });
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (showMap && mapRef.current && window.google) {
-      initializeMap();
+
+
+  const loadGoogleMaps = (): Promise<void> => {
+    if (window.google && window.googleMapsLoaded) {
+      return Promise.resolve();
     }
-  }, [showMap]);
-
-  useEffect(() => {
-    const filtered = cities.filter(city => 
-      city?.city?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredCities(filtered);
-  }, [searchQuery, cities]);
-
-  const fetchCities = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get<City[]>(`${API_URL}/api/cities`);
-      setCities(response.data);
-      setFilteredCities(response.data);
-    } catch (error) {
-      console.error('Failed to fetch cities:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadGoogleMaps = () => {
-    if (window.google) return;
     
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
-    script.async = true;
-    document.head.appendChild(script);
+    if (googleMapsPromise) {
+      return googleMapsPromise;
+    }
+    
+    googleMapsPromise = new Promise((resolve, reject) => {
+      if (window.google) {
+        window.googleMapsLoaded = true;
+        resolve();
+        return;
+      }
+      
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.onload = () => {
+        window.googleMapsLoaded = true;
+        resolve();
+      };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+    
+    return googleMapsPromise;
   };
 
   const initializeMap = () => {
     if (!mapRef.current || !window.google) return;
 
+    setLoading(true);
     const map = new window.google.maps.Map(mapRef.current, {
       center: { lat: 28.6139, lng: 77.2090 }, // Delhi center
       zoom: 10,
+      zoomControl: true,
+      scrollwheel: true,
+      disableDoubleClickZoom: false,
+      gestureHandling: 'auto',
     });
 
     mapInstance.current = map;
+    
+    // Set loading to false when map is ready
+    map.addListener('idle', () => {
+      setLoading(false);
+    });
 
     map.addListener('click', (event: any) => {
       const lat = event.latLng.lat();
@@ -134,6 +138,7 @@ export default function LocationModal({ isOpen, onClose, onLocationSelect }: Loc
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
+      setLoading(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude;
@@ -172,12 +177,15 @@ export default function LocationModal({ isOpen, onClose, onLocationSelect }: Loc
               if (status === 'OK' && results[0]) {
                 setSelectedLocation({ lat, lng, address: results[0].formatted_address });
               }
+              setLoading(false);
             });
           }
         },
         (error) => {
           console.error('Error getting location:', error);
-        }
+          setLoading(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
       );
     }
   };
@@ -185,14 +193,16 @@ export default function LocationModal({ isOpen, onClose, onLocationSelect }: Loc
   const handleConfirm = () => {
     if (selectedLocation) {
       onLocationSelect(selectedLocation);
+      // Clear skip flag when location is selected
+      localStorage.removeItem('locationSkipped');
       onClose();
-    } else {
-      const city = cities.find(c => c.city === selectedCity);
-      if (city) {
-        onLocationSelect({ lat: city.lat, lng: city.lng, address: city.city });
-        onClose();
-      }
     }
+  };
+
+  const handleSkip = () => {
+    // Mark that user has skipped location
+    localStorage.setItem('locationSkipped', 'true');
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -211,113 +221,59 @@ export default function LocationModal({ isOpen, onClose, onLocationSelect }: Loc
         </div>
 
         <div className="p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
-          <div className="flex space-x-2 mb-4">
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm text-gray-600">
+              {selectedLocation ? 'Drag the marker or click elsewhere to change location' : 'Detecting your location...'}
+            </p>
             <button
-              onClick={() => setShowMap(false)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg ${
-                !showMap ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
-              }`}
+              onClick={getCurrentLocation}
+              className="px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
+              disabled={loading}
             >
-              Select City
-            </button>
-            <button
-              onClick={() => setShowMap(true)}
-              className={`px-4 py-2 text-sm font-medium rounded-lg ${
-                showMap ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'
-              }`}
-            >
-              Use Map
+              {loading ? '⏳' : '📍'} Detect Location
             </button>
           </div>
-
-          {!showMap ? (
-            <>
-              <p className="text-sm text-gray-600 mb-4">
-                Choose your city to get accurate service availability and pricing.
-              </p>
-              
-              <div className="relative mb-4">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search cities..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:border-gray-400 focus:shadow-md focus:outline-none"
-                />
+          
+          {loading ? (
+            <div className="flex items-center justify-center h-96 bg-gray-100 rounded-lg">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                <p className="text-sm text-gray-600">Loading map...</p>
               </div>
-              
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {loading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                    <span className="ml-2 text-gray-600">Loading cities...</span>
-                  </div>
-                ) : filteredCities.length === 0 ? (
-                  <p className="text-center text-gray-500 py-4">No cities found</p>
-                ) : (
-                  filteredCities.map((city) => (
-                    <button
-                      key={city.id}
-                      onClick={() => setSelectedCity(city.city)}
-                      className={`w-full p-3 text-left rounded-lg border transition-colors ${
-                        selectedCity === city.city
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50'
-                      }`}
-                    >
-                      {city.city}
-                    </button>
-                  ))
-                )}
-              </div>
-            </>
+            </div>
           ) : (
-            <>
-              <div className="flex justify-between items-center mb-4">
-                <p className="text-sm text-gray-600">
-                  {selectedLocation ? 'Drag the marker or click elsewhere to change location' : 'Detecting your location...'}
-                </p>
-                <button
-                  onClick={getCurrentLocation}
-                  className="px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
-                >
-                  📍 Detect Location
-                </button>
-              </div>
-              
-              <div ref={mapRef} className="w-full h-96 rounded-lg border"></div>
-              
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm font-medium text-blue-900">Instructions:</p>
-                <ul className="text-xs text-blue-700 mt-1 space-y-1">
-                  <li>• Click anywhere on the map to set your location</li>
-                  <li>• Drag the map to explore different areas</li>
-                  <li>• Use zoom controls to get more precise location</li>
-                  <li>• The red marker shows your selected location</li>
-                </ul>
-              </div>
-              
-              {selectedLocation && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm font-medium text-blue-900">Selected Location:</p>
-                  <p className="text-xs text-blue-700">{selectedLocation.address}</p>
-                </div>
-              )}
-            </>
+            <div ref={mapRef} className="w-full h-96 rounded-lg border"></div>
+          )}
+          
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <p className="text-sm font-medium text-blue-900">Instructions:</p>
+            <ul className="text-xs text-blue-700 mt-1 space-y-1">
+              <li>• Click anywhere on the map to set your location</li>
+              <li>• Drag the map to explore different areas</li>
+              <li>• Use zoom controls to get more precise location</li>
+              <li>• The red marker shows your selected location</li>
+            </ul>
+          </div>
+          
+          {selectedLocation && (
+            <div className="mt-4 p-3 bg-green-50 rounded-lg">
+              <p className="text-sm font-medium text-green-900">Selected Location:</p>
+              <p className="text-xs text-green-700">{selectedLocation.address}</p>
+            </div>
           )}
         </div>
 
         <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50 rounded-b-lg">
           <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            onClick={handleSkip}
+            disabled={hasSkippedBefore}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Skip for now
+            {hasSkippedBefore ? 'Location Required' : 'Skip for now'}
           </button>
           <button
             onClick={handleConfirm}
-            disabled={!selectedCity && !selectedLocation}
+            disabled={!selectedLocation}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Confirm Location

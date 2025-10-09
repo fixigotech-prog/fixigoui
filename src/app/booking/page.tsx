@@ -3,8 +3,12 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { TrashIcon, MapPinIcon, CalendarIcon, CreditCardIcon } from '@heroicons/react/24/outline';
-import PageHeader from '@/components/PageHeader';
-import PageFooter from '@/components/PageFooter';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import LocationModal from '@/components/LocationModal';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { fetchAddressBook, addToAddressBook, fetchCitiesStates, setSelectedAddress } from '@/store/slices/bookingSlice';
+import { setSelectedLocation } from '@/store/slices/locationSlice';
 
 interface ServiceDetail {
   id: number;
@@ -81,6 +85,20 @@ export default function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCancellationPolicy, setShowCancellationPolicy] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [addressForm, setAddressForm] = useState({
+    address: '',
+    city: '',
+    state: '',
+    lat: 0,
+    lng: 0
+  });
+  
+  const dispatch = useAppDispatch();
+  const { addressBook, cities, states, selectedAddress } = useAppSelector(state => state.booking);
 
   const tipOptions = [0, 50, 100, 150, 200];
 
@@ -88,14 +106,26 @@ export default function BookingPage() {
     fetchServices();
     fetchPromocodes();
     loadCart();
+    dispatch(fetchAddressBook());
+    dispatch(fetchCitiesStates());
     
     const savedLocation = localStorage.getItem('userLocation');
     if (savedLocation) {
       const parsedLocation = JSON.parse(savedLocation);
       setLocation(parsedLocation);
+      setUserLocation(parsedLocation);
+      setAddressForm({
+        address: parsedLocation.address,
+        city: '',
+        state: '',
+        lat: parsedLocation.lat,
+        lng: parsedLocation.lng
+      });
+    } else {
+      // Show location modal if no location is selected from index page
+      setShowLocationModal(true);
     }
-
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     saveCart();
@@ -206,7 +236,7 @@ export default function BookingPage() {
           status: 'pending' as const,
           propertyType: propertyDetails.type || undefined,
           propertySize: propertyDetails.size || undefined,
-          address: location.address,
+          address: addressForm.address,
           tipAmount: getTipAmount(),
           notes: propertyDetails.notes,
           promocode: selectedPromocode || undefined
@@ -226,7 +256,7 @@ export default function BookingPage() {
 
   const isStepValid = () => {
     switch (currentStep) {
-      case 1: return location.address !== '';
+      case 1: return addressForm.address !== '' && addressForm.city !== '' && addressForm.state !== '';
       case 2: return cart.length > 0;
       case 3: return selectedDate !== '' && selectedTime !== '';
       case 4: return true;
@@ -254,6 +284,49 @@ export default function BookingPage() {
     }
   };
 
+  const handleLocationSelect = (location: { lat: number; lng: number; address: string }) => {
+    setUserLocation(location);
+    setLocation(location);
+    setAddressForm({
+      address: location.address,
+      city: '',
+      state: '',
+      lat: location.lat,
+      lng: location.lng
+    });
+    dispatch(setSelectedLocation(location));
+    localStorage.setItem('userLocation', JSON.stringify(location));
+    setShowLocationModal(false);
+  };
+
+  const handleAddressBookSelect = (address: any) => {
+    setLocation({
+      lat: address.lat,
+      lng: address.lng,
+      address: address.address
+    });
+    setAddressForm({
+      address: address.address,
+      city: address.city,
+      state: address.state,
+      lat: address.lat,
+      lng: address.lng
+    });
+    dispatch(setSelectedAddress(address));
+  };
+
+  const handleSaveToAddressBook = async () => {
+    if (addressForm.address && addressForm.city && addressForm.state) {
+      await dispatch(addToAddressBook({
+        address: addressForm.address,
+        city: addressForm.city,
+        state: addressForm.state,
+        lat: addressForm.lat,
+        lng: addressForm.lng
+      }));
+    }
+  };
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -264,17 +337,87 @@ export default function BookingPage() {
               <h2 className="text-xl font-semibold text-gray-900">Set Your Location</h2>
             </div>
             
+            {/* Address Book */}
+            {addressBook && addressBook.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h3 className="font-medium text-gray-900 mb-3">Saved Addresses</h3>
+                <div className="space-y-2">
+                  {addressBook.map((addr) => (
+                    <div
+                      key={addr.id}
+                      onClick={() => handleAddressBookSelect(addr)}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedAddress?.id === addr.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="font-medium text-sm">{addr.address}</div>
+                      <div className="text-xs text-gray-500">{addr.city}, {addr.state}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-medium text-gray-900">Address Information</h3>
+                  <button
+                    onClick={() => setShowLocationModal(true)}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    📍 Use Map
+                  </button>
+                </div>
+                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Complete Address</label>
                   <textarea
-                    value={location.address}
-                    onChange={(e) => setLocation({...location, address: e.target.value})}
+                    value={addressForm.address}
+                    onChange={(e) => setAddressForm({...addressForm, address: e.target.value})}
                     rows={3}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter your complete address"
                   />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                    <select
+                      value={addressForm.city}
+                      onChange={(e) => setAddressForm({...addressForm, city: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select City</option>
+                      {cities && cities.length > 0 ? cities.map((city) => (
+                        <option key={typeof city === 'string' ? city : city.city} value={typeof city === 'string' ? city : city.city}>
+                          {typeof city === 'string' ? city : city.city}
+                        </option>
+                      )) : (
+                        <option disabled>No cities available</option>
+                      )}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                    <select
+                      value={addressForm.state}
+                      onChange={(e) => setAddressForm({...addressForm, state: e.target.value})}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select State</option>
+                      {states && states.length > 0 ? states.map((state) => (
+                        <option key={typeof state === 'string' ? state : state.state} value={typeof state === 'string' ? state : state.state}>
+                          {typeof state === 'string' ? state : state.state}
+                        </option>
+                      )) : (
+                        <option disabled>No states available</option>
+                      )}
+                    </select>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
@@ -320,6 +463,15 @@ export default function BookingPage() {
                     placeholder="Any special instructions or notes"
                   />
                 </div>
+                
+                {addressForm.address && addressForm.city && addressForm.state && (
+                  <button
+                    onClick={handleSaveToAddressBook}
+                    className="text-sm text-blue-600 hover:text-blue-700"
+                  >
+                    💾 Save to Address Book
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -711,7 +863,18 @@ export default function BookingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <PageHeader title={getPageTitle()} subtitle={getPageSubtitle()} />
+      <Header 
+        onLoginClick={() => setIsModalOpen(true)}
+        userLocation={userLocation}
+        onLocationChange={handleLocationSelect}
+      />
+      
+      <div className="pt-20 bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <h1 className="text-2xl font-bold text-gray-900">{getPageTitle()}</h1>
+          <p className="text-gray-600">{getPageSubtitle()}</p>
+        </div>
+      </div>
       
       <main className="flex-1 container mx-auto px-4 py-8">
         {renderStep()}
@@ -802,7 +965,16 @@ export default function BookingPage() {
         </div>
       </main>
       
-      <PageFooter />
+      <LocationModal 
+        isOpen={isLocationModalOpen || showLocationModal} 
+        onClose={() => {
+          setIsLocationModalOpen(false);
+          setShowLocationModal(false);
+        }} 
+        onLocationSelect={handleLocationSelect} 
+      />
+      
+      <Footer />
     </div>
   );
 }
