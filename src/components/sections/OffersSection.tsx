@@ -4,8 +4,8 @@ import Image from 'next/image';
 import Slider from 'react-slick';
 
 const staticOffers = [
-  { id: 1, imageUrl: "/images/offers/vip-22.png" },
-  { id: 2, imageUrl: "/images/offers/Painting.png" },
+  { id: 1, imageUrl: "/images/offers/Painting.png" },
+  { id: 2, imageUrl: "/images/offers/vip-22.png" },
   { id: 3, imageUrl: "/images/offers/Exterior-Cleanig.png" },
   { id: 4, imageUrl: "/images/offers/Cleaning-discount.png" },
 ];

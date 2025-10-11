@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useSearchParams } from 'next/navigation';
 import { TrashIcon, MapPinIcon, CalendarIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LocationModal from '@/components/LocationModal';
+import Toast from '@/components/Toast';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { fetchAddressBook, addToAddressBook, fetchCitiesStates, setSelectedAddress } from '@/store/slices/bookingSlice';
 import { fetchCities } from '@/store/slices/locationSlice';
@@ -67,6 +69,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 export default function BookingPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [services, setServices] = useState<Service[]>([]);
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
+  const searchParams = useSearchParams();
+  const categoryId = searchParams.get('category');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [promocodes, setPromocodes] = useState<Promocode[]>([]);
   const [selectedPromocode, setSelectedPromocode] = useState('');
@@ -97,6 +102,7 @@ export default function BookingPage() {
     lat: 0,
     lng: 0
   });
+  const [toast, setToast] = useState({ message: '', type: 'success' as 'success' | 'error', isVisible: false });
   
   const dispatch = useAppDispatch();
   const { addressBook, selectedAddress } = useAppSelector(state => state.booking);
@@ -133,6 +139,12 @@ export default function BookingPage() {
   }, [dispatch]);
 
   useEffect(() => {
+    if (currentStep === 2 && categoryId) {
+      fetchFilteredServices(categoryId);
+    }
+  }, [currentStep, categoryId]);
+
+  useEffect(() => {
     saveCart();
   }, [cart]);
 
@@ -142,6 +154,19 @@ export default function BookingPage() {
       setServices(response.data.filter(service => service.isActive));
     } catch (err) {
       console.error('Failed to fetch services:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFilteredServices = async (catId: string) => {
+    try {
+      setLoading(true);
+      const response = await axios.get<Service[]>(`${API_URL}/api/services/filter/${catId}`);
+      setFilteredServices(response.data.filter(service => service.isActive));
+    } catch (err) {
+      console.error('Failed to fetch filtered services:', err);
+      setFilteredServices([]);
     } finally {
       setLoading(false);
     }
@@ -248,12 +273,12 @@ export default function BookingPage() {
         };
         await axios.post(`${API_URL}/api/bookings`, booking);
       }
-      alert('Booking created successfully!');
+      setToast({ message: 'Booking created successfully!', type: 'success', isVisible: true });
       setCart([]);
       setCurrentStep(1);
     } catch (err) {
       console.error('Failed to create booking:', err);
-      alert('Failed to create booking');
+      setToast({ message: 'Failed to create booking', type: 'error', isVisible: true });
     } finally {
       setIsSubmitting(false);
     }
@@ -496,7 +521,7 @@ export default function BookingPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {services.map((service) => {
+                  {(categoryId ? filteredServices : services).map((service) => {
                     const serviceName = getServiceName(service);
                     const serviceDescription = service.details.find(d => d.lang === 'en')?.description || '';
                     
@@ -980,6 +1005,13 @@ export default function BookingPage() {
       />
       
       <Footer />
+      
+      <Toast 
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={() => setToast({ ...toast, isVisible: false })}
+      />
     </div>
   );
 }
